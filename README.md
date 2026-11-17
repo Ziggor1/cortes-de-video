@@ -17,7 +17,7 @@ Durações: **Short até 3:00** · **médio** de mais de 3 até 10 min · **long
 - Placa **NVIDIA** é opcional: com ela, a transcrição é ~16× o tempo real; sem ela, roda na CPU (mais devagar). O codificador de vídeo usa NVIDIA, Apple, Intel ou AMD quando houver.
 
 ## Instalação
-1. Baixe a pasta [`skill/cortes-de-video`](skill/cortes-de-video), compacte-a em um **ZIP** (a pasta `cortes-de-video` na raiz do ZIP) e envie no Claude em **Personalizar → Skills → Enviar skill**. Em planos Team/Enterprise, quem já tem a skill pode compartilhá-la pelo menu da skill.
+1. Baixe **`cortes-de-video-skill.zip`** na [última Release](https://github.com/Ziggor1/cortes-de-video/releases/latest) (ou compacte você mesmo a pasta [`skill/cortes-de-video`](skill/cortes-de-video), com a pasta `cortes-de-video` na raiz do ZIP) e envie no Claude em **Personalizar → Skills → Enviar skill**. Em planos Team/Enterprise, quem já tem a skill pode compartilhá-la pelo menu da skill.
 2. Numa conversa nova, diga: **"/cortes-de-video instalar"**.
 3. O Claude reconhece o computador, faz algumas perguntas (onde criar o cofre, transcrição na GPU ou na CPU, idioma, dados do YouTube, LLM opcional, canais e identidade visual), mostra cada comando antes de instalar algo e termina com um autoteste.
 
