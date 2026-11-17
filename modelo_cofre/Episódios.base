@@ -1,0 +1,37 @@
+filters:
+  and:
+    - 'tipo == "episodio"'
+views:
+  - type: table
+    name: "Pendentes"
+    filters:
+      and:
+        - 'status != "4 · publicado"'
+    groupBy:
+      property: note.status
+      direction: ASC
+    order:
+      - file.name
+      - note.canal
+      - note.proximo_passo
+      - note.duracao
+      - note.longos
+      - note.medios
+      - note.shorts
+      - note.nota_max
+      - note.publicados
+      - note.alertas
+  - type: table
+    name: "Todos por canal"
+    groupBy:
+      property: note.canal
+      direction: ASC
+    order:
+      - file.name
+      - note.status
+      - note.duracao
+      - note.longos
+      - note.medios
+      - note.shorts
+      - note.nota_max
+      - note.publicados

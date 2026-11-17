@@ -1,0 +1,57 @@
+{
+  "_leia": "Valores padrão do sistema. NÃO edite aqui: o instalar.py grava as escolhas desta máquina em config.json, que prevalece.",
+  "pasta_trabalho": "Pasta de Trabalho",
+  "idioma": "pt",
+  "encoder": "auto",
+  "whisper_dispositivo": "auto",
+  "whisper_modelo_analise": "turbo",
+  "whisper_modelo_bipe": "turbo",
+  "whisper_tipo_gpu": "float16",
+  "nvidia_dlls": "",
+  "atencao_manter_se_maior_que_s": 300,
+  "atencao_manter_se_obs_contem": [
+    "conferir",
+    "verificar",
+    "manter a linguagem",
+    "atribuir"
+  ],
+  "palavroes": [
+    "porra",
+    "puta",
+    "caralho",
+    "merda",
+    "foda",
+    "fodase",
+    "buceta",
+    "cacete",
+    "bosta",
+    "escroto",
+    "cuzao",
+    "arrombado"
+  ],
+  "bipe_quando_obs_contem": [
+    "bipar",
+    "bipe"
+  ],
+  "medio_tambem_short_ate_s": 180,
+  "final_vertical_s": 7,
+  "remover_pedidos_de_like": true,
+  "loudnorm": {
+    "I": -14,
+    "TP": -1.5,
+    "LRA": 11
+  },
+  "vertical_zoom": 1.5,
+  "short_cortar_pausas_acima_s": 0.6,
+  "short_folga_pausa_s": 0.15,
+  "limite_short_s": 180,
+  "plataformas_com_limite": [],
+  "llm": {
+    "ativado": false,
+    "base_url": "",
+    "chave_env": "CORTES_LLM_KEY",
+    "modelos": [],
+    "paralelo": 2,
+    "_leia": "Triagem e juiz por LLM (opcionais). base_url de qualquer API compatível com OpenAI (FreeLLMAPI, OpenRouter, Ollama…); a chave fica na variável de ambiente chave_env ou em _sistema/.env, nunca aqui."
+  }
+}

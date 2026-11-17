@@ -1,0 +1,18 @@
+# desta máquina (nunca publicar)
+sistema/config.json
+sistema/.env
+.env
+sistema/calibracao.json
+sistema/desempenho.json
+sistema/.venv/
+sistema/bin/
+sistema/_logs/
+sistema/_backup*/
+__pycache__/
+*.pyc
+# conteúdo de episódios
+*.mp4
+*.mov
+*.mkv
+*.xlsx
+_previas/

@@ -1,0 +1,8 @@
+# Pacotes Python da skill de cortes (versões testadas; o instalar.py instala daqui).
+faster-whisper==1.2.1
+ctranslate2==4.8.5
+numpy==2.5.4
+openpyxl==3.1.5
+pillow==12.3.0
+yt-dlp[default]==2026.10.26
+yt-dlp-ejs==0.8.0
