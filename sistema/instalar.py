@@ -10,6 +10,8 @@
 #   python instalar.py config chave=valor ...        grava escolhas desta máquina em _sistema/config.json (ex.: llm.ativado=true)
 #   python instalar.py autoteste [--sem-whisper]     testa codificador, fontes, legenda, capa e Whisper com um vídeo sintético
 #   python instalar.py atualizar [--ref main]        baixa a versão nova dos scripts do GitHub (guarda a anterior em _sistema/_backup_*)
+#   python instalar.py checar ["<pasta do episódio>"]  confere os mínimos de hardware e o espaço em disco (código 1 = abaixo)
+#   python instalar.py vigia [--executar]            instala o vigia de temperatura (Windows: tarefa agendada; Linux: serviço do usuário)
 #
 # Nada é apagado: atualizações guardam a versão anterior. config.json, .env (chaves), calibracao.json e desempenho.json
 # são desta máquina e nunca vão para o GitHub.
@@ -89,6 +91,71 @@ def achar_bin(nome):
 def arq_bin():
     return 'arm64' if ARQ in ('arm64', 'aarch64') else 'amd64'
 
+# ------------------------------------------------------------------ hardware: mínimos e recomendado (19/11/2026)
+MINIMO = {'threads': 4, 'ram_gb': 7.5}          # 8 GB aparecem como ~7,8 GB no sistema
+RECOMENDADO = {'threads': 8, 'ram_gb': 15}      # 16 GB aparecem como ~15,7 GB
+DISCO_X_VIDEO = 7                               # medido: episódio de 3,3 GB ocupou 22 GB com os cortes e o Publicar
+
+def ram_gb():
+    try:
+        if SO == 'Windows':
+            import ctypes
+            class M(ctypes.Structure):
+                _fields_ = [('l', ctypes.c_ulong), ('m', ctypes.c_ulong)] + [(n, ctypes.c_ulonglong) for n in ('t', 'a', 'tp', 'ap', 'tv', 'av', 'x')]
+            m = M(); m.l = ctypes.sizeof(M); ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)); return m.t / 2**30
+        if SO == 'Darwin':
+            return int(rodar(['sysctl', '-n', 'hw.memsize']).stdout.strip()) / 2**30
+        return os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 2**30
+    except Exception: return 0.0
+
+def checar(pasta=None):
+    """Mínimos para começar um episódio: threads, RAM e disco livre (~7× o vídeo). Placa de vídeo não tem mínimo."""
+    prob, aviso = [], []
+    th, ram = os.cpu_count() or 0, ram_gb()
+    if th < MINIMO['threads']: prob.append(f'{th} threads (mínimo {MINIMO["threads"]})')
+    elif th < RECOMENDADO['threads']: aviso.append(f'{th} threads (recomendado {RECOMENDADO["threads"]}): mais lento')
+    if ram and ram < MINIMO['ram_gb']: prob.append(f'{ram:.1f} GB de RAM (mínimo 8)')
+    elif ram and ram < RECOMENDADO['ram_gb']: aviso.append(f'{ram:.1f} GB de RAM (recomendado 16): mais lento, feche outros programas')
+    if not shutil.which('nvidia-smi') and SO != 'Darwin': aviso.append('sem placa NVIDIA: transcrição na CPU, bem mais lenta e mais quente')
+    if pasta and os.path.isdir(pasta):
+        vid = sum(os.path.getsize(os.path.join(pasta, f)) for f in os.listdir(pasta) if f.lower().endswith(('.mp4', '.mkv', '.mov', '.webm')))
+        livre = shutil.disk_usage(pasta).free
+        if vid and livre < vid * DISCO_X_VIDEO:
+            prob.append(f'disco: {livre / 1e9:.0f} GB livres, o episódio pede ~{vid * DISCO_X_VIDEO / 1e9:.0f} GB (rode a limpeza)')
+    p(f'Hardware: {th} threads, {ram:.1f} GB de RAM, limite de carga = {max(2, th // 3)} threads')
+    for a in aviso: p('AVISO:', a)
+    p('ABAIXO DO MÍNIMO: ' + '; '.join(prob) if prob else 'OK: dentro do mínimo')
+    return 1 if prob else 0
+
+# ------------------------------------------------------------------ vigia de temperatura
+def vigia(executar=False):
+    if SO == 'Darwin':
+        p('macOS: o vigia não roda (ler a temperatura exige sudo). Os limites de carga da fila (prioridade baixa) continuam valendo.'); return 0
+    if SO == 'Windows':
+        ps1 = os.path.join(AQUI, 'instalar_vigia.ps1')
+        p('Plano: rodar instalar_vigia.ps1 como administrador. Ele extrai ou baixa o LibreHardwareMonitor para _sistema/_ferramentas, '
+          'instala o .NET 10 Desktop Runtime se faltar (instalador da Microsoft, assinatura conferida) e cria a tarefa agendada '
+          '"Vigia de temperatura - cortes" (ao entrar no Windows).')
+        if not executar: p('Para executar: python instalar.py vigia --executar (o Windows vai pedir permissão de administrador).'); return 0
+        return rodar(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1]).returncode
+    unid = os.path.expanduser('~/.config/systemd/user/cortes-vigia.service')
+    texto = (f'[Unit]\nDescription=Vigia de temperatura dos cortes de vídeo\n\n[Service]\nExecStart={py_do_sistema()} {os.path.join(AQUI, "vigia_temperatura.py")}\n'
+             f'WorkingDirectory={AQUI}\nRestart=on-failure\n\n[Install]\nWantedBy=default.target\n')
+    p(f'Plano: criar o serviço do usuário {unid} e ligá-lo (systemctl --user enable --now cortes-vigia). Não precisa de administrador.')
+    if not executar: p('Para executar: python instalar.py vigia --executar'); return 0
+    if not shutil.which('systemctl'): p('Sem systemd: rode em segundo plano com  nohup python vigia_temperatura.py &'); return 1
+    os.makedirs(os.path.dirname(unid), exist_ok=True); open(unid, 'w', encoding='utf-8').write(texto)
+    r = rodar(['systemctl', '--user', 'daemon-reload']); r = rodar(['systemctl', '--user', 'enable', '--now', 'cortes-vigia'])
+    p(r.stdout + r.stderr); return r.returncode
+
+def vigia_estado():
+    if SO == 'Windows':
+        r = rodar(['powershell', '-NoProfile', '-Command', "(Get-ScheduledTask 'Vigia de temperatura - cortes' -ErrorAction SilentlyContinue).State"])
+        return (r.stdout or '').strip() or 'não instalado'
+    if SO == 'Linux' and shutil.which('systemctl'):
+        return (rodar(['systemctl', '--user', 'is-active', 'cortes-vigia']).stdout or '').strip() or 'não instalado'
+    return 'não suportado (macOS)'
+
 # ------------------------------------------------------------------ verificar
 def verificar(saida_json=False):
     itens = []   # (item, ok|falta|aviso|info, detalhe, como resolver)
@@ -160,10 +227,18 @@ def verificar(saida_json=False):
             add('API de LLM (triagem)', 'aviso', f'{url}: {str(e)[:80]}', 'confira llm.base_url, a chave (llm.chave_env) e se o serviço está aberto')
     else:
         add('API de LLM (triagem)', 'info', 'desligada (opcional)', 'python instalar.py config llm.ativado=true llm.base_url=... llm.modelos=[...]')
+    # hardware e temperatura
+    th, ram = os.cpu_count() or 0, ram_gb()
+    ok_hw = th >= MINIMO['threads'] and (not ram or ram >= MINIMO['ram_gb'])
+    add('Hardware', 'ok' if ok_hw else 'falta', f'{th} threads, {ram:.1f} GB de RAM (mínimo 4 threads e 8 GB; recomendado 8 e 16)',
+        '' if ok_hw else 'abaixo do mínimo: o fluxo não começa neste computador')
+    est = vigia_estado()
+    add('Vigia de temperatura', 'ok' if est.lower() in ('running', 'active', 'ready') else 'info' if 'macOS' in est else 'aviso', est,
+        '' if est.lower() in ('running', 'active', 'ready') or 'macOS' in est else 'python instalar.py vigia --executar')
     # disco
     alvo = COFRE or os.path.expanduser('~')
     livre = shutil.disk_usage(alvo).free / 1e9
-    add('Espaço em disco', 'ok' if livre > 30 else 'aviso', f'{livre:.0f} GB livres em {alvo}', '' if livre > 30 else 'cada episódio de 2–3 h ocupa ~5–15 GB com os cortes')
+    add('Espaço em disco', 'ok' if livre > 30 else 'aviso', f'{livre:.0f} GB livres em {alvo}', '' if livre > 30 else 'cada episódio ocupa ~7× o tamanho do vídeo original (3 h ≈ 22 GB)')
     if saida_json:
         print(json.dumps([dict(item=a, status=b, detalhe=c_, resolver=d) for a, b, c_, d in itens], ensure_ascii=False, indent=1)); return 0
     simb = {'ok': 'OK   ', 'falta': 'FALTA', 'aviso': 'AVISO', 'info': 'info '}
@@ -203,7 +278,7 @@ def copiar_sistema(origem, destino, backup=None):
     """Copia os scripts para o cofre. Arquivos desta máquina (config.json, .env…) e pastas locais nunca são substituídos."""
     os.makedirs(destino, exist_ok=True); n = 0
     for raiz, dirs, arqs in os.walk(origem):
-        dirs[:] = [d for d in dirs if d not in ('__pycache__', '.venv', 'bin', '_logs') and not d.startswith('_backup')]
+        dirs[:] = [d for d in dirs if d not in ('__pycache__', '.venv', 'bin', '_logs', '_ferramentas') and not d.startswith('_backup')]
         rel = os.path.relpath(raiz, origem); dest = os.path.join(destino, rel); os.makedirs(dest, exist_ok=True)
         for a in arqs:
             if a in LOCAIS or a.endswith('.pyc'): continue
@@ -420,6 +495,8 @@ def main(a):
         c = cfg_gravar(mud); p('config.json desta máquina:', json.dumps(c, ensure_ascii=False)); return 0
     if cmd == 'autoteste': return autoteste(flag('--sem-whisper'))
     if cmd == 'atualizar': return atualizar(resto[resto.index('--ref') + 1] if '--ref' in resto else 'main')
+    if cmd == 'checar': return checar(args[0] if args else None)
+    if cmd == 'vigia': return vigia(flag('--executar'))
     p('Comando desconhecido:', cmd); return 1
 
 if __name__ == '__main__':

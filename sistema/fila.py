@@ -9,7 +9,7 @@
 # "criar" acrescenta "notas" no fim. Uma fila com itens pendentes só é trocada com --substituir.
 # Em "finalizar --refazer" a fila usa --refazer-desde <criação da fila>: o que já foi refeito não é refeito de novo.
 import os, sys, json, time, subprocess, datetime
-from comum import AQUI, CONFIG, PY, processo_vivo, manter_acordado
+from comum import AQUI, CONFIG, PY, processo_vivo, manter_acordado, aplicar_limites
 
 EST = os.path.join(AQUI, '_logs', 'fila_estado.json'); LOG = os.path.join(AQUI, '_logs', 'fila.txt')
 ETAPAS = {'transcrever': 'transcrever.py', 'sinais': 'sinais.py', 'youtube': 'youtube.py', 'momentos': 'momentos.py', 'triagem': 'triagem_llm.py', 'juiz': 'juiz_llm.py',
@@ -66,6 +66,8 @@ def rodar():
     retomada = any(i['status'] in ('rodando', 'feito', 'erro') for i in e['itens'])
     e['pid'] = os.getpid(); gravar(e); marca('FILA RETOMADA' if retomada else 'FILA INICIADA')
     liberar = manter_acordado()   # impede a suspensão por inatividade enquanto a fila roda (Windows, macOS e Linux)
+    lim = aplicar_limites()       # prioridade baixa e parte dos núcleos (temperatura); as etapas herdam
+    if lim: marca('limites de carga: ' + ', '.join(lim))
     env = dict(os.environ, PYTHONIOENCODING='utf-8')
     for i in e['itens']:
         if i['status'] == 'feito': continue

@@ -6,7 +6,7 @@
 # Uso: python finalizar.py "<pasta do episódio>" [--so-capas] [--so-shorts] [--refazer] [--refazer-desde <epoch>] [--plano]
 # Lê Cortes/_edicao.json (gerado pelo editar.py). Os cortes brutos em Cortes/ não são alterados.
 import os, re, sys, json, shutil, tempfile, datetime, textwrap, subprocess
-from comum import FF, FP, CONFIG, sp, duracao, log, final_vertical_cabe, encoder, fonte as fonte_padrao, preparar_fonte_legenda
+from comum import FF, FP, CONFIG, sp, duracao, log, final_vertical_cabe, encoder, fonte as fonte_padrao, preparar_fonte_legenda, limitar_ff
 import visual
 
 def enc():
@@ -15,7 +15,7 @@ def enc():
 AUD = ['-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2']
 
 def run(cmd, cwd=None):
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
+    r = subprocess.run(limitar_ff(cmd), capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
     if r.returncode: log('ERRO', r.stderr[-900:])
     return r.returncode == 0
 

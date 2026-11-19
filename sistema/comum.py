@@ -56,7 +56,7 @@ def caminho_ff(p):
     return "'" + p.replace('\\', '/').replace(':', '\\:').replace("'", "\\'") + "'"
 
 def sp(cmd):
-    return subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+    return subprocess.run(limitar_ff(cmd), capture_output=True, text=True, encoding='utf-8', errors='replace')
 
 def duracao(f):
     o = sp([FP, '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).stdout.strip()
@@ -174,3 +174,46 @@ def manter_acordado():
             return p.terminate
     except Exception: pass
     return lambda: None
+
+# ---------------------------------------------------------------- carga do processador (temperatura)
+# Decidido em 18-19/11/2026, depois de um notebook passar de 95 °C na finalização: as etapas longas rodam com
+# prioridade baixa, presas a parte dos núcleos, e o ffmpeg com threads limitadas. Fica mais lento e bem mais frio.
+# config: prioridade_baixa (true), cpu_afinidade ("auto" | máscara | 0 = sem limite), ffmpeg_threads ("auto" | n | 0).
+def threads_limite():
+    """"auto" = um terço das threads do computador, no mínimo 2 (12 threads -> 4; 4 threads -> 2)."""
+    return max(2, (os.cpu_count() or 4) // 3)
+
+def _n_threads(chave):
+    v = CONFIG.get(chave, 'auto')
+    if v == 'auto': return threads_limite()
+    try: return int(v or 0)
+    except (TypeError, ValueError): return 0
+
+def limitar_ff(cmd):
+    """Põe -threads/-filter_threads no ffmpeg (as etapas chamam o ffmpeg por sp() ou por run() do finalizar)."""
+    n = _n_threads('ffmpeg_threads')
+    if n and cmd and os.path.basename(str(cmd[0])).lower().startswith('ffmpeg') and '-threads' not in cmd:
+        return [cmd[0], '-threads', str(n), '-filter_threads', str(n), '-filter_complex_threads', str(n)] + list(cmd[1:])
+    return cmd
+
+def aplicar_limites():
+    """Chamado pela fila: prioridade baixa e afinidade de núcleos. As etapas e o ffmpeg herdam do processo da fila.
+    Windows: SetPriorityClass + SetProcessAffinityMask; Linux: nice + sched_setaffinity; macOS: só nice (não há afinidade)."""
+    feito = []
+    try:
+        if CONFIG.get('prioridade_baixa', True):
+            if os.name == 'nt':
+                import ctypes; k = ctypes.windll.kernel32; k.SetPriorityClass(k.GetCurrentProcess(), 0x4000)   # BELOW_NORMAL
+            else:
+                os.nice(10)
+            feito.append('prioridade baixa')
+        n = _n_threads('cpu_afinidade')
+        if n and n < (os.cpu_count() or n + 1):
+            if os.name == 'nt':
+                import ctypes; k = ctypes.windll.kernel32
+                k.SetProcessAffinityMask(k.GetCurrentProcess(), ctypes.c_size_t((1 << n) - 1)); feito.append(f'{n} núcleos')
+            elif hasattr(os, 'sched_setaffinity'):
+                os.sched_setaffinity(0, set(range(n))); feito.append(f'{n} núcleos')
+    except Exception as e:
+        feito.append(f'limites não aplicados ({e})')
+    return feito

@@ -3,7 +3,7 @@
 # o que não existir aparece como "(preencher)".
 # Uso: python publicacao.py "<pasta do episódio>"   -> Publicar\Textos de publicação.md
 import os, sys, json, glob
-from comum import hms, log
+from comum import hms, log, CONFIG
 
 def hashtags(lista):
     out = []
@@ -22,7 +22,11 @@ def gerar(pasta):
     infos = glob.glob(os.path.join(pasta, '_analise', 'youtube', '*.info.json'))
     info = json.load(open(infos[0], encoding='utf-8')) if infos else {}
     if info.get('title') and info.get('webpage_url'):
-        credito = f"Trecho de: {info['title']} — {info.get('channel') or info.get('uploader') or '(canal: preencher)'}. Episódio completo: {info['webpage_url']}"
+        arroba = info.get('uploader_id') if str(info.get('uploader_id') or '').startswith('@') else None
+        if CONFIG.get('credito', 'arroba') == 'link':
+            credito = f"Trecho de: {info['title']} — {info.get('channel') or info.get('uploader') or '(canal: preencher)'}. Episódio completo: {info['webpage_url']}"
+        else:   # padrão desde 17/11/2026: o canal original citado só pelo @, sem link
+            credito = f"Trecho de: {info['title']} — {arroba or '(@ do canal: confirmar com o usuário)'}"
     else:
         credito = 'Trecho de: (preencher o título, o canal e o link do episódio original — sem dados do YouTube em _analise\\youtube)'
     rot = {'Longos': 'Longo', 'Medios': 'Médio', 'Shorts': 'Short'}

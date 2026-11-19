@@ -57,7 +57,9 @@ Repositório: https://github.com/Ziggor1/cortes-de-video (licença MIT).
 
 ## Etapa 7 — Verificar e autoteste
 1. `"<PY>" "<S>/instalar.py" verificar` — tudo obrigatório tem de sair OK.
-2. `"<PY>" "<S>/instalar.py" autoteste` — gera um vídeo sintético e testa o codificador, a finalização 16:9 com marca, a capa, o Short com legenda e o Whisper (modelo tiny, ~75 MB). Mostre ao usuário a `capa.jpg` e o `short_quadro.jpg` da pasta indicada. Anote o codificador e se o Whisper rodou na GPU ou na CPU.
+2. `"<PY>" "<S>/instalar.py" checar` — mínimos de hardware (4 threads e 8 GB de RAM; recomendado 8 threads, 16 GB e placa NVIDIA de 4 GB). Abaixo do mínimo, diga ao usuário que o fluxo não vai começar neste computador. Abaixo do recomendado, diga que funciona, mas mais devagar, e que os tempos do primeiro episódio serão medidos.
+3. **Vigia de temperatura** (Windows e Linux; recomendado sobretudo em notebook): explique em uma linha o que ele faz (congela a fila a 85 °C e retoma a 75 °C) e pergunte se instala. No Windows ele pede administrador, usa o LibreHardwareMonitor (código aberto, MPL-2.0) e pode instalar o .NET 10 Desktop Runtime da Microsoft. Mostre o plano com `"<PY>" "<S>/instalar.py" vigia` e, com o "pode", rode `… vigia --executar`. Confira com `verificar` (linha "Vigia de temperatura"). No macOS, diga que o vigia não roda e que valem só os limites de carga.
+4. `"<PY>" "<S>/instalar.py" autoteste` — gera um vídeo sintético e testa o codificador, a finalização 16:9 com marca, a capa, o Short com legenda e o Whisper (modelo tiny, ~75 MB). Mostre ao usuário a `capa.jpg` e o `short_quadro.jpg` da pasta indicada. Anote o codificador e se o Whisper rodou na GPU ou na CPU.
 
 ## Canais (instalação e "novo canal")
 **Terceira rodada de perguntas**, para cada canal:
@@ -73,7 +75,7 @@ Repositório: https://github.com/Ziggor1/cortes-de-video (licença MIT).
 5. **Antes de finalizar o primeiro episódio do canal**, faça a amostra em vídeo real (regra 3) e registre a aprovação na nota de Finalização.
 
 ## Encerramento da instalação
-- Diga onde ficou o cofre, o que foi instalado (pacotes, ffmpeg, Deno, modelo), o codificador e se a transcrição será na GPU ou na CPU.
+- Diga onde ficou o cofre, o que foi instalado (pacotes, ffmpeg, Deno, modelo), o codificador e se a transcrição será na GPU ou na CPU, se o vigia de temperatura ficou ativo e o resultado do `checar` (se o computador está abaixo do recomendado, avise que será mais lento).
 - **Obsidian** (opcional, recomendado): https://obsidian.md → "Abrir pasta como cofre" → a pasta do cofre. O `00 Painel.md` e a tabela `Episódios.base` mostram o estado de tudo.
 - Como usar: colocar o `.mp4` em `Pasta de Trabalho/<Canal>/<Episódio>/` e pedir "processar pendentes".
 - Lembretes, uma vez: direitos autorais dos cortes de terceiros são de quem publica; a triagem por LLM envia transcrição de vídeo público a um serviço externo; nada é apagado sem permissão.
