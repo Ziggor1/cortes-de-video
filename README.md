@@ -21,6 +21,7 @@ Num notebook (i5-12450H + RTX 3050 de 4 GB) a finalização de um episódio de 3
 - **Mínimos de hardware** (`python instalar.py checar "<pasta do episódio>"`, rodado pela skill antes de cada episódio): abaixo do mínimo, o fluxo não começa e diz o motivo.
 - **Crédito do canal original** nos textos de publicação: agora só o **@ do canal** (sem link do episódio). Para voltar ao link: `instalar.py config credito=link`.
 - **Skill**: novas regras para economizar o uso do plano do Claude (uma conferência agendada por processo, sem ficar checando, comandos agrupados, uma conversa por episódio) e para pausar ou desligar no meio sem perder nada.
+- **O que foi adicionado, alterado e removido** em relação à 1.0.0: veja o [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requisitos
 - **Claude desktop** com a extensão **Desktop Commander** (ou **Claude Code**), para o Claude rodar comandos no seu computador.
