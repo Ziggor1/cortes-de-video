@@ -8,6 +8,8 @@ sistema/.venv/
 sistema/bin/
 sistema/_logs/
 sistema/_backup*/
+sistema/_ferramentas/
+sistema/hardware.json
 __pycache__/
 *.pyc
 # conteúdo de episódios

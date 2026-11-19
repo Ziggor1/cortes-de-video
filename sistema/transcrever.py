@@ -42,7 +42,8 @@ _SO_CPU = False
 def _cpu(nome):
     from faster_whisper import WhisperModel
     log('whisper', nome, 'na CPU')
-    return WhisperModel(nome, device='cpu', compute_type='int8', cpu_threads=max(1, (os.cpu_count() or 4) - 2))
+    from comum import threads_limite   # na CPU, respeita o limite de threads (temperatura)
+    return WhisperModel(nome, device='cpu', compute_type='int8', cpu_threads=threads_limite() if CONFIG.get('cpu_afinidade', 'auto') else max(1, (os.cpu_count() or 4) - 2))
 
 def modelo(nome):
     global _SO_CPU

@@ -11,5 +11,7 @@
 - **Archivo Black** — SIL Open Font License 1.1, © 2017 The Archivo Black Project Authors. Texto da licença em `sistema/fontes/OFL-ArchivoBlack.txt`.
 
 ## Programas e pacotes usados (não incluídos; instalados pelo usuário)
+- LibreHardwareMonitor (MPL-2.0), usado pelo vigia de temperatura no Windows; baixado do GitHub do projeto pelo `instalar_vigia.ps1`.
+  .NET Desktop Runtime (licença da Microsoft), exigido pelo LibreHardwareMonitor.
 - FFmpeg (LGPL/GPL, conforme o build), faster-whisper (MIT), CTranslate2 (MIT), modelos Whisper (MIT), yt-dlp (Unlicense),
   Deno (MIT), openpyxl (MIT), NumPy (BSD), Pillow (MIT-CMU), bibliotecas NVIDIA cuBLAS/cuDNN (licença da NVIDIA).
