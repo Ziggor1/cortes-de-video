@@ -21,15 +21,13 @@ Transforma lives e podcasts em **cortes longos para o YouTube** e **cortes curto
 | Etapa | O que acontece | Resultado |
 |---|---|---|
 | 1. Análise | Transcrição local com o tempo de cada palavra (faster-whisper); sinais de audiência do YouTube (momentos mais repetidos, comentários com tempo, reações no chat da live); mapa de momentos; divisão do episódio por assunto; segunda leitura por LLM, opcional | Planilha `Cortes_<tema>.xlsx` com os cortes, notas por critério, três títulos, texto da capa e hashtags, conferida por um validador |
-| 2. Revisão visual | Página no navegador, em duas fases: primeiro os cortes longos sobre o episódio inteiro (inclusive o que ficou sem corte), depois os cortes curtos dentro dos longos aprovados | Cortes aprovados, recusados ou ajustados por você |
-| 3. Edição | Longos em 16:9 sem recodificar; curtos em 9:16 com fundo desfocado e sem pausas longas; remoção de anúncios e trechos de risco; bipe em palavrões | `Cortes/Longos` e `Cortes/Cortes Curtos` |
-| 4. Finalização | Identidade visual do canal: intro, marca d'água, tela final, capas 1280×720, legenda com palavra destacada e uma versão de cada corte curto por plataforma; volume em −14 LUFS | `Publicar/Longos`, `Publicar/Capas` e `Publicar/Cortes Curtos/{YouTube, Instagram, TikTok}` |
-| 5. Publicação e notas | Textos de publicação (títulos, descrição, hashtags, crédito ao canal original) e notas do Obsidian com painel, estado de cada episódio e regras editáveis | `Publicar/Textos de publicação.md` e notas do cofre |
+| 2. Edição | Longos em 16:9 sem recodificar; curtos em 9:16 com fundo desfocado e sem pausas longas; remoção de anúncios e trechos de risco; bipe em palavrões | `Cortes/Longos` e `Cortes/Cortes Curtos` |
+| 3. Finalização | Identidade visual do canal: intro, marca d'água, tela final, capas 1280×720, legenda com palavra destacada e uma versão de cada corte curto por plataforma; volume em −14 LUFS | `Publicar/Longos`, `Publicar/Capas` e `Publicar/Cortes Curtos/{YouTube, Instagram, TikTok}` |
+| 4. Publicação e notas | Textos de publicação (títulos, descrição, hashtags, crédito ao canal original) e notas do Obsidian com painel, estado de cada episódio e regras editáveis | `Publicar/Textos de publicação.md` e notas do cofre |
 
 Durações: **corte curto** até 3:00 (o ideal é de 1:00 a 2:30, com começo, meio e fim) · **corte longo** de mais de 3 até 40 min, um assunto por corte.
 
 ## Novidades da 1.2.0
-- **Revisão visual dos cortes em duas fases** (`revisar_cortes.py`). Abre no navegador uma linha do tempo do episódio, no estilo de um editor de vídeo: assuntos, cortes longos, trechos sem corte, remoções, miniaturas, forma de onda e reação do público. Para cada corte você aprova, recusa, arrasta as bordas ou usa os botões de ajuste fino; pode propor um corte num trecho vazio, marcar pontos e escrever pedidos. A revisão é gravada no `cortes.json` com `aplicar_revisao.py` ou pelo botão **Aplicar** da página. As bordas que você ajustou não são movidas depois pelo ajuste automático.
 - **Fim do corte médio.** O conteúdo dele já estava nos longos. Agora há só dois tipos: longo (mais de 3 até 40 min) e curto (até 3:00).
 - **"Shorts" passou a se chamar "Cortes Curtos"** nas pastas, nos arquivos (`Curto NN - tema.mp4`) e na planilha ("Corte curto"). Dentro de `Publicar/Cortes Curtos` continuam as pastas YouTube, Instagram e TikTok.
 - **Cortes curtos mais completos** e **aviso de trecho sem corte**: o validador avisa sobre curto abaixo de 45 s, sobre assunto repetido em dois longos e sobre trechos de 3 min ou mais sem nenhum corte nem remoção.
@@ -40,7 +38,6 @@ Durações: **corte curto** até 3:00 (o ideal é de 1:00 a 2:30, com começo, m
 - **Windows 10/11, macOS (Apple Silicon ou Intel) ou Linux** (x86_64 ou ARM64).
 - **Python 3.12+** (o assistente instala, se faltar).
 - **Disco:** cerca de 5 GB para o sistema e cerca de **7 vezes o tamanho do vídeo original** por episódio.
-- Navegador comum, para a revisão visual (a página fica só no seu computador).
 
 | | Mínimo (o fluxo não começa abaixo disto) | Recomendado |
 |---|---|---|
@@ -72,7 +69,7 @@ Médias de quatro episódios completos processados por este fluxo, numa máquina
 
 ¹ Média de três episódios; no quarto, a triagem foi refeita em partes e o tempo não ficou registrado inteiro.
 
-Os tempos são de processamento ativo, tirados dos registros de cada etapa (`_analise/log_*.txt`); intervalos de mais de 10 min sem atividade não entram. A coleta dos dados do YouTube não tem tempo registrado e ficou de fora. Parte dos episódios foi processada antes dos limites de carga e do vigia de temperatura; com eles ligados, a finalização tende a demorar um pouco mais. A leitura da transcrição e a escolha dos cortes pelo Claude, e o tempo que você leva na revisão visual, também não entram: dependem da conversa.
+Os tempos são de processamento ativo, tirados dos registros de cada etapa (`_analise/log_*.txt`); intervalos de mais de 10 min sem atividade não entram. A coleta dos dados do YouTube não tem tempo registrado e ficou de fora. Parte dos episódios foi processada antes dos limites de carga e do vigia de temperatura; com eles ligados, a finalização tende a demorar um pouco mais. A leitura da transcrição e a escolha dos cortes pelo Claude também não entram: dependem da conversa.
 
 ### Estimativa em outras máquinas
 > **Atenção: a tabela abaixo é uma estimativa, não uma medição.** Ela foi calculada a partir das médias acima, considerando o que mais pesa em cada etapa: a transcrição depende da placa NVIDIA (sem ela, roda no processador com um modelo menor); a finalização depende do codificador de vídeo da placa e do número de núcleos; a edição depende do disco e do processador. Os valores reais variam com a temperatura, o disco, o sistema e os outros programas abertos. Episódio de referência: 2 h 30 min, cerca de 18 cortes, sem a triagem por LLM.
@@ -121,19 +118,16 @@ python ~/Cortes/_sistema/novo_canal.py "Meu Canal" --logo logo.png --intro intro
 ## Uso
 1. Coloque o vídeo em `Pasta de Trabalho/<Canal>/<Episódio>/`.
 2. Diga ao Claude **"processar pendentes"** (ou "analisar <episódio>").
-3. Quando a análise terminar, o Claude abre a **revisão dos cortes longos**. Aprove, recuse ou ajuste e clique em **Enviar** (ou **Aplicar**). Depois vem a **revisão dos cortes curtos**, do mesmo jeito.
+3. Se quiser, confira a planilha `Cortes_<tema>.xlsx` antes da edição (peça "analisar e me mostrar antes de editar").
 4. O Claude edita e finaliza. Os arquivos para publicar ficam em `Publicar/`.
 
-Outros pedidos: "revisar os cortes de <episódio>", "editar…", "finalizar…", "amostra de…", "textos de publicação de…", "desempenho", "limpeza", "status", "novo canal", "atualizar o sistema". O passo a passo completo está em `modelo_cofre/01 Workflow.md`.
-
-Para abrir a revisão sem o Claude: `python <cofre>/_sistema/revisar_cortes.py "<pasta do episódio>" --fase longos` (ou `--fase curtos`).
+Outros pedidos: "editar…", "finalizar…", "amostra de…", "textos de publicação de…", "desempenho", "limpeza", "status", "novo canal", "atualizar o sistema". O passo a passo completo está em `modelo_cofre/01 Workflow.md`.
 
 ## Atualizar
 `python <cofre>/_sistema/instalar.py atualizar` baixa os scripts novos e guarda a versão anterior. Suas configurações, chaves, regras e episódios não são tocados. A skill é atualizada enviando o ZIP novo da Release.
 
 ## Privacidade e segurança
 - Tudo roda no seu computador. A transcrição é local.
-- A página de revisão é servida só em `127.0.0.1` e só lê arquivos de dentro da pasta do episódio.
 - A **triagem por LLM é opcional e vem desligada**. Ligada, envia a transcrição (só de vídeos **públicos** no YouTube) à API que você escolher (FreeLLMAPI, OpenRouter, Ollama local ou outra compatível com OpenAI). As chaves ficam em `_sistema/.env` ou em variável de ambiente, nunca no repositório nem na conversa.
 - Textos de terceiros (transcrição, comentários, chat, respostas de LLM) são tratados como dados, nunca como instruções.
 - Nada é apagado sem sua permissão; versões anteriores são guardadas.
@@ -146,7 +140,7 @@ Fazer cortes de conteúdo de terceiros exige autorização do canal original ou 
 ## Estrutura do repositório
 ```
 skill/cortes-de-video/     SKILL.md + references/instalacao.md (o que o Claude segue)
-sistema/                   scripts (vão para <cofre>/_sistema), página da revisão, fontes livres e config padrão
+sistema/                   scripts (vão para <cofre>/_sistema), fontes livres e config padrão
 modelo_cofre/              notas iniciais do cofre (Regras, Workflow, tabela do Obsidian)
 requirements*.txt          pacotes Python com versões travadas
 ```

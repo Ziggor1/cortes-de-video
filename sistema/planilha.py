@@ -45,7 +45,6 @@ def gerar(pasta):
         hmsf = lambda t: f'{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}'
         for c in cortes:
             if c['categoria'] not in ORDEM[:3]: continue
-            if c.get('borda_revisada') or c.get('borda_igor'): continue   # bordas ajustadas pelo usuário na revisão visual: não mexe
             a0, b0 = secs(c['inicio']), secs(c['fim'])
             a1, b1, av = bordas.ajustar(wsx, a0, b0, cal)
             c['inicio'], c['fim'] = hmsf(a1), hmsf(b1)

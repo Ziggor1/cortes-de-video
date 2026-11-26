@@ -3,19 +3,11 @@
 ## 1.2.0 — 26/11/2026 (em relação à 1.1.0)
 
 ### Adicionado
-- **Revisão visual dos cortes em duas fases**:
-  - `sistema/revisar_cortes.py` abre a página no navegador (`--fase longos` ou `--fase curtos`; sem fase, escolhe pelo `cortes.json`);
-  - `sistema/revisao_servidor.py` é um servidor local só com a biblioteca padrão do Python. Escuta em `127.0.0.1`, entrega o vídeo em pedaços de 8 MB, tenta a porta seguinte se a primeira estiver ocupada e só lê arquivos de dentro da pasta do episódio;
-  - `sistema/revisao_cortes.py` gera os dados da página e grava `_analise/revisao_cortes.json`. Também cria, na primeira vez, as miniaturas a cada 30 s e a forma de onda;
-  - `sistema/pagina/revisao_cortes.html` é a página da linha do tempo, com as faixas de assuntos, cortes longos (trechos sem corte hachurados), cortes curtos, remoções, vídeo, áudio, reação do público e pedidos. Tem aprovar e recusar, arrastar bordas, ajuste fino de ±5, ±1 e ±0,3 s, "ponto atual", ajuste ao limite das palavras, propor corte num trecho vazio, marcar ponto (M) e pedido geral.
-- `sistema/aplicar_revisao.py`: mostra o que a revisão muda e, com `--aplicar`, grava no `cortes.json`. Guarda uma cópia do anterior. Recusado sai; borda ajustada fica marcada com `borda_revisada`; corte proposto entra para ser completado. A fase dos longos grava `_analise/longos_aprovados.json`, base da fase dos curtos.
 - `validar_cortes.py`:
   - aviso **SEM CORTE** para trecho de 3 min ou mais sem corte nem remoção;
   - aviso **SHORT CURTO** para corte curto abaixo de 45 s;
   - aviso de assunto repetido em dois longos (mais de 20% em comum).
 - `comum.py`: `PASTA_TIPO`, `PREFIXO_TIPO`, `ROTULO_TIPO` e `pasta_tipo()`.
-- Nova chave em `config_padrao.json`: `revisao_porta` (8766).
-- Skill: "Passo 1b — Revisão visual dos cortes (duas fases)" e os novos pedidos "revisar os cortes de X" e "apliquei a revisão".
 
 ### Alterado
 - **Durações:** corte curto até 3:00 (o ideal é de 1:00 a 2:30, com começo, meio e fim); corte longo de mais de 3 até 40 min, com cada assunto em um longo só. Antes: Short até 3:00, médio de mais de 3 até 10 min, longo de mais de 10 até 40 min.
@@ -25,10 +17,9 @@
   - categoria da planilha "Corte curto" (antes "Short/Reels", que continua aceita e é convertida).
 - **Triagem por LLM** (`triagem_llm.py`): pede só dois tipos, "Short" (45 s a 2 min 50 s, ideia completa) e "Longo" (assunto inteiro). O cache antigo com "Médio" ou "Tema" é lido como "Longo".
 - **Mapa de momentos** (`momentos.py`): os assuntos sugerem só longo ou curto. "Corte curto" conta como Short ao marcar o que ficou FORA.
-- **Ajuste fino das bordas** (`planilha.py`): não mexe nas bordas ajustadas na revisão.
 - **Notas do Obsidian** (`atualizar_notas.py`): as colunas "L / M / S" viraram "Longos / Curtos". A tabela `Episódios.base` não tem mais a coluna de médios.
 - `conferir.py`, `publicacao.py`, `finalizar.py`, `editar.py`, `amostra_trecho.py`, `previa_marca.py` e `visual.py`: textos e caminhos com os nomes novos.
-- Notas do modelo de cofre (Decisões, Padrões de análise, Padrões de edição, Finalização e identidade visual, Workflow): durações, nomes e a revisão em duas fases. Os tempos de referência saíram das notas e foram para o README.
+- Notas do modelo de cofre (Decisões, Padrões de análise, Padrões de edição, Finalização e identidade visual, Workflow): durações e nomes. Os tempos de referência saíram das notas e foram para o README.
 - README reescrito: tabela do que a skill faz, médias de tempo por episódio e estimativa para outras classes de máquina.
 
 ### Removido

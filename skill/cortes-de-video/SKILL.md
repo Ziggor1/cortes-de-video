@@ -1,9 +1,9 @@
 ---
 name: cortes-de-video
-description: "Fluxo completo de cortes de vídeo (lives e podcasts) para YouTube, Shorts, Reels e TikTok: instala o sistema no PC (Windows, Linux ou macOS), analisa o episódio, escolhe os momentos, abre a revisão visual dos cortes em duas fases, edita, finaliza com a identidade visual do canal, gera textos de publicação e mantém um cofre do Obsidian. Use para instalar, processar pendentes, analisar, revisar cortes, aplicar revisão, editar, finalizar, aplicar ajustes, amostra, desempenho, limpeza, status, novo canal ou atualizar o sistema."
+description: "Fluxo completo de cortes de vídeo (lives e podcasts) para YouTube, Shorts, Reels e TikTok: instala o sistema no PC (Windows, Linux ou macOS), analisa o episódio, escolhe os momentos, edita, finaliza com a identidade visual do canal, gera textos de publicação e mantém um cofre do Obsidian. Use para instalar, processar pendentes, analisar, editar, finalizar, aplicar ajustes, amostra, desempenho, limpeza, status, novo canal ou atualizar o sistema."
 ---
 
-# Cortes de vídeo — fluxo único (instalação → análise → revisão visual → edição → finalização → publicação → notas)
+# Cortes de vídeo — fluxo único (instalação → análise → edição → finalização → publicação → notas)
 
 O trabalho acontece nesta conversa; os arquivos ficam no computador do usuário, num **cofre** (pasta comum, que também abre no Obsidian). O cofre guarda as regras (`Regras/`), os scripts (`_sistema/`) e o estado de cada episódio (`Pasta de Trabalho/<Canal>/<Episódio>/`).
 Responda no idioma do usuário (padrão: português), de forma formal e prática. Nunca invente dados: números, nomes e citações vêm da transcrição ou dos arquivos, e o que não puder ser conferido vai para Atenção com "conferir".
@@ -31,7 +31,7 @@ Responda no idioma do usuário (padrão: português), de forma formal e prática
 4. **Decisões ficam registradas.** Leia `Regras/Decisões.md` no início; não proponha de novo o que está em "Recusado". Toda decisão ou recusa nova entra lá com a data, na hora.
 
 ## Detalhes do ambiente
-- Scripts em `<S>`: `instalar.py`, `novo_canal.py`, `transcrever.py`, `sinais.py`, `youtube.py`, `momentos.py`, `triagem_llm.py`, `juiz_llm.py`, `tempos.py`, `validar_cortes.py`, `bordas.py`, `planilha.py`, `reanalisar.py`, `editar.py`, `visual.py`, `legenda.py`, `finalizar.py`, `conferir.py`, `publicacao.py`, `desempenho.py`, `limpeza.py`, `amostra_trecho.py`, `previa_marca.py`, `revisar_cortes.py`, `aplicar_revisao.py` (+ `revisao_servidor.py`, `revisao_cortes.py`, `pagina/`), `fila.py`, `atualizar_notas.py`, `vigia_temperatura.py`, `instalar_vigia.ps1` (+ `comum.py`, `config_padrao.json`, `config.json` desta máquina).
+- Scripts em `<S>`: `instalar.py`, `novo_canal.py`, `transcrever.py`, `sinais.py`, `youtube.py`, `momentos.py`, `triagem_llm.py`, `juiz_llm.py`, `tempos.py`, `validar_cortes.py`, `bordas.py`, `planilha.py`, `reanalisar.py`, `editar.py`, `visual.py`, `legenda.py`, `finalizar.py`, `conferir.py`, `publicacao.py`, `desempenho.py`, `limpeza.py`, `amostra_trecho.py`, `previa_marca.py`, `fila.py`, `atualizar_notas.py`, `vigia_temperatura.py`, `instalar_vigia.ps1` (+ `comum.py`, `config_padrao.json`, `config.json` desta máquina).
 - `config.json` (desta máquina) prevalece sobre `config_padrao.json`. Mude escolhas com `"<PY>" "<S>/instalar.py" config chave=valor` (ex.: `whisper_modelo_analise=small`, `llm.ativado=true`).
 - Codificador de vídeo e GPU são detectados sozinhos (NVIDIA, Apple, Intel, AMD; senão CPU). Sem placa NVIDIA, a transcrição roda na CPU e demora mais: avise nos planos de tempo.
 - Para editar um script, use um pequeno script Python de substituição com `assert` de ocorrência única e rode `py_compile` depois. Não passe código com aspas por `python -c` dentro do PowerShell; grave um `.py` e rode.
@@ -61,7 +61,6 @@ Responda no idioma do usuário (padrão: português), de forma formal e prática
    - "refazer X" (pedido explícito): reedita ou refinaliza X. "Refazer as capas de X": `finalizar.py --so-capas --refazer`.
    - "aplicar ajustes de X": `atualizar_notas.py` → `editar.py "<pasta>"` → `finalizar.py "<pasta>"` → `atualizar_notas.py`. Só os cortes com correção nova são refeitos.
    - "analisar e me mostrar antes de editar": pare depois do Passo 1 e resuma.
-   - "revisar os cortes de X" / "apliquei a revisão": Passo 1b.
    - "amostra de X": regra 3. "textos de publicação de X": Passo 4. "desempenho": Passo 6. "limpeza": Passo 7. "status": resumo do painel e da fila.
    - "novo canal", "verificar a instalação", "atualizar o sistema": `references/instalacao.md` (seções Canais e Manutenção).
    Se houver vários episódios e o pedido não disser qual, pergunte.
@@ -85,13 +84,6 @@ Episódio = pasta `Pasta de Trabalho/<Canal>/<Episódio>/` com o `.mp4`.
 6. Use os picos do `youtube_resumo.txt` e do `momentos.md` para subir cortes e cite isso na observação.
    **Tema em alta com fonte:** se houver ferramenta de busca na web, para cada corte em que você daria 2, busque uma notícia recente e grave o link em `fonte_em_alta`. Sem notícia (ou sem busca), o critério vale 1.
 7. Escreva `_analise/cortes.json` (formato no topo de `planilha.py`) e rode `planilha.py "<pasta>"` (chama o `validar_cortes.py`). Corrija até sobrarem só avisos que são perguntas ao usuário: duração fora da categoria, título longo, capa fora de 3–7 palavras, hashtags fora de 3–5, Short com palavrão sem "bipar", corte curto acima de 3:00 ou de 2:53 (com os 7 s da finalização passa de 3:00), longo pouco acima de 3:00, **SEM CORTE** (trecho de 3 min ou mais sem corte nem remoção: vira corte ou o motivo é dito), **GANCHO**, **FIM**, **REPETIÇÃO**, **GAGUEJADA**, "Tema em alta" = 2 sem fonte. Gancho/fim mantido de propósito: diga por quê. Depois da planilha, rode `momentos.py` de novo e veja o que ficou **FORA**: todo candidato forte fora precisa de um motivo dito ao usuário. Antes, mova a planilha anterior para `_analise/planilhas_antigas/`. Leia `_analise/bordas.txt` e confira as bordas ("início recuou", "fim avançou", "meio de um raciocínio").
-
-## Passo 1b — Revisão visual dos cortes (duas fases)
-A planilha é a proposta; quem aprova é o usuário, pela página de revisão (abre no navegador, só no próprio computador).
-1. **Fase 1 — longos:** `"<PY>" "<S>/revisar_cortes.py" "<pasta>" --fase longos` (rode em segundo plano; a janela fica aberta enquanto ele revisa). A página mostra o episódio inteiro: assuntos, cortes longos, trechos **sem corte** (hachurados), remoções, miniaturas, forma de onda e reação do público. Para cada longo ele aprova, recusa, arrasta as bordas ou usa os botões ±5/±1/±0,3 s; pode propor um corte num trecho sem corte, marcar pontos (M) e escrever pedidos.
-2. Quando ele avisar que enviou (ou clicar em **Aplicar** na página): `aplicar_revisao.py "<pasta>"` mostra o que muda; com `--aplicar` grava no `cortes.json` (cópia do anterior em `_analise/`). Recusado sai; borda ajustada fica marcada (`borda_revisada`) e o ajuste fino da planilha não a move; corte proposto entra para você completar (tema, títulos, capa, critérios). Trate cada pedido e ponto marcado listado.
-3. **Fase 2 — curtos:** proponha os cortes curtos **dentro dos longos aprovados** (`_analise/longos_aprovados.json`), rode `planilha.py` e abra `revisar_cortes.py "<pasta>" --fase curtos`. Mesmo ciclo: revisão → `aplicar_revisao.py --aplicar` → `planilha.py`.
-4. Só depois das duas fases siga para a edição. Se o usuário dispensar a revisão ("pode editar direto"), siga sem ela.
 
 ## Passo 2 — Edição
 1. `editar.py "<pasta>" --plano` e confira: cortes que somem inteiros, Atenção mantidos, Shorts com BIPE.

@@ -16,7 +16,6 @@ As linhas marcadas como "padrão" vêm com o sistema; troque ou apague as que n�
 | padrão | Durações: **corte curto** até **3:00**; **corte longo** de mais de 3 até **40 min**. Não há corte médio (o conteúdo dele já está nos longos). Todo corte de até 3:00 é corte curto e sempre ganha a finalização vertical. |
 | padrão | Cada assunto entra em **um** corte longo só. Corte curto pode sair de dentro de um longo. Trecho de 3 min ou mais sem corte nem remoção precisa de motivo. |
 | padrão | Nomes: pastas `Cortes Curtos` (com YouTube, Instagram e TikTok dentro, em `Publicar/`) e arquivos `Curto NN - tema.mp4`; categoria da planilha "Corte curto". |
-| padrão | **Revisão em duas fases** antes da edição: primeiro os longos sobre o episódio inteiro (inclusive o que ficou sem corte), depois os curtos dentro dos longos aprovados (`revisar_cortes.py` → `aplicar_revisao.py`). |
 | padrão | Shorts em três versões (YouTube, Instagram, TikTok), cada uma com a finalização vertical própria; sem intro. Longos: intro + marca d'água + final 16:9. |
 | padrão | Legenda só nos cortes curtos: 2–3 palavras, maiúsculas, palavra falada em amarelo, palavrões censurados. |
 | padrão | Capas só para os longos: um quadro com uma pessoa, frase em 2 linhas (branca + vermelha), borda amarela, foco no texto. |

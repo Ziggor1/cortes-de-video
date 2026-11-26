@@ -74,8 +74,6 @@ Ordem da análise: `youtube.py` → `momentos.py` → `triagem_llm.py` (chama o 
 **Rubrica do bom momento**
 - **Corte curto**: uma ideia completa. A 1ª frase prende sozinha (pergunta, afirmação forte, número, conflito), o meio desenvolve e o fim fecha a ideia (conclusão, piada, frase de efeito). Ideal de 1:00 a 2:30; abaixo de 45 s só frase de efeito que se sustenta sozinha; nunca depende do que veio antes.
 - **Longo**: um assunto inteiro da seção 3 (história, reação ou discussão completa), do fato ou da pergunta que o dispara até a conclusão; só junte assuntos vizinhos quando forem o mesmo tema.
-
-**Revisão em duas fases** (`revisar_cortes.py`): (1) longos mostrados sobre o episódio inteiro, com os trechos sem corte à vista, para o usuário aprovar, recusar, aumentar, diminuir ou propor; (2) curtos propostos dentro dos longos aprovados, com a mesma revisão. Cada fase é gravada no `cortes.json` por `aplicar_revisao.py --aplicar`; bordas ajustadas na revisão não são movidas pelo ajuste fino.
 - **Prioridade**: conteúdo forte **com** sinal da audiência (reação no chat, "Mais repetidos", comentário com tempo) vem antes de conteúdo forte sem sinal, que vem antes de sinal sem conteúdo. Sinal sozinho não basta: cumprimento, nome da live e leitura de superchat inflam o chat.
 - **Concordância**: momento apontado por duas fontes (sinais, Short pronto, triagem LLM) entra na lista, salvo motivo; cite a concordância na Observação.
 - **Fora dos cortes**: todo candidato de Short com nota ≥ +2,5 e todo candidato da triagem com nota ≥ 8 que ficarem fora precisam de um motivo dito ao usuário (repetido, risco, depende de contexto, fraco na leitura).
