@@ -4,6 +4,19 @@ Transforma lives e podcasts em **cortes longos para o YouTube** e **cortes curto
 
 **Versão atual: 1.2.0** — o que mudou está em [Novidades](#novidades-da-120) e, em detalhe, no [`CHANGELOG.md`](CHANGELOG.md).
 
+## Sumário
+- [O que a skill faz](#o-que-a-skill-faz)
+- [Novidades da 1.2.0](#novidades-da-120)
+- [Requisitos](#requisitos)
+- [Tempo de processamento](#tempo-de-processamento)
+- [Instalação](#instalação)
+- [Uso](#uso)
+- [Atualizar](#atualizar)
+- [Privacidade e segurança](#privacidade-e-segurança)
+- [Direitos autorais](#direitos-autorais)
+- [Estrutura do repositório](#estrutura-do-repositório)
+- [Licença](#licença)
+
 ## O que a skill faz
 | Etapa | O que acontece | Resultado |
 |---|---|---|
