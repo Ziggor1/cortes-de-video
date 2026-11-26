@@ -66,7 +66,7 @@ Repositório: https://github.com/Ziggor1/cortes-de-video (licença MIT).
 1. Nome do canal (vira a pasta `Pasta de Trabalho/<Canal>`).
 2. Arquivos da identidade visual — todos opcionais; peça o caminho de cada um (ou que o usuário os coloque numa pasta e diga qual):
    - **intro** 16:9 (vídeo curto ou imagem);
-   - **final** 16:9 (tela final dos longos e médios);
+   - **final** 16:9 (tela final dos longos);
    - **final vertical** dos Shorts: um só para as 3 plataformas ou um por plataforma (YouTube, Instagram, TikTok);
    - **logo** em PNG com fundo transparente (vira marca d'água e logo da capa);
    - **fonte** própria (.ttf/.otf; sem ela, usa Anton nas capas e Archivo Black nas legendas).

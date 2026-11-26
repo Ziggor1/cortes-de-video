@@ -1,12 +1,12 @@
 ﻿# Finalização para publicar.
-#   Longos e médios: intro + corte com marca d'água (camadas do canal) + final 16:9, e capa 1280x720.
+#   Longos: intro + corte com marca d'água (camadas do canal) + final 16:9, e capa 1280x720.
 #   Shorts: legenda de palavra destacada + marca d'água vertical + finalização vertical de cada plataforma
-#           (uma versão por plataforma: Publicar/Shorts/YouTube, /Instagram, /TikTok).
+#           (uma versão por plataforma: Publicar/Cortes Curtos/YouTube, /Instagram, /TikTok).
 #           Todo Short ganha a finalização vertical (17/11/2026); o validar_cortes.py avisa quando corte + final passa de 3:00.
 # Uso: python finalizar.py "<pasta do episódio>" [--so-capas] [--so-shorts] [--refazer] [--refazer-desde <epoch>] [--plano]
 # Lê Cortes/_edicao.json (gerado pelo editar.py). Os cortes brutos em Cortes/ não são alterados.
 import os, re, sys, json, shutil, tempfile, datetime, textwrap, subprocess
-from comum import FF, FP, CONFIG, sp, duracao, log, final_vertical_cabe, encoder, fonte as fonte_padrao, preparar_fonte_legenda, limitar_ff
+from comum import FF, FP, CONFIG, sp, duracao, log, final_vertical_cabe, pasta_tipo, encoder, fonte as fonte_padrao, preparar_fonte_legenda, limitar_ff
 import visual
 
 def enc():
@@ -191,7 +191,7 @@ def processar(pasta, so_capas=False, so_shorts=False, refazer=False, desde=None,
                     log(f"  vídeo  {c['tipo']:7} {base}  ({c.get('dur', 0) / 60:.1f} min)"); nv += 1; total += c.get('dur', 0)
                 if not so_shorts and velho(src, os.path.join(pub, 'Capas', base[:-4] + '.jpg')): log('  capa  ', base); nc += 1
             elif c['tipo'] == 'Shorts' and not so_capas:
-                if any(velho(src, os.path.join(pub, 'Shorts', pl, base)) for pl in finais_v):
+                if any(velho(src, os.path.join(pub, pasta_tipo('Shorts'), pl, base)) for pl in finais_v):
                     log(f"  Short  ×{len(finais_v)}      {base}  ({c.get('dur', 0):.0f} s)"); nv += 1; total += c.get('dur', 0) * len(finais_v)
         log(f'PLANO: {nv} cortes a finalizar ({total / 60:.0f} min de vídeo) e {nc} capas. Nada foi alterado.')
         return
@@ -213,9 +213,9 @@ def processar(pasta, so_capas=False, so_shorts=False, refazer=False, desde=None,
                 r['capas_extras'] = [os.path.relpath(x, pasta) for x in capa(src, frase_capa(c), cp, vis)[1:]]
             if os.path.exists(cp): r['capa'] = os.path.relpath(cp, pasta)
         elif c['tipo'] == 'Shorts' and not so_capas:
-            destinos = {p: os.path.join(pub, 'Shorts', p, base) for p in finais_v}
+            destinos = {p: os.path.join(pub, pasta_tipo('Shorts'), p, base) for p in finais_v}
             if any(velho(src, d) for d in destinos.values()):
-                log('finalizando: Shorts', base, '→', ', '.join(destinos))
+                log('finalizando: Cortes Curtos', base, '→', ', '.join(destinos))
                 trab = tempfile.mkdtemp(prefix='short_'); ass = None
                 try:
                     ws = palavras_short(src, os.path.join(pasta, '_analise', 'legendas', base[:-4] + '.json'))

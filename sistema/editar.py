@@ -3,7 +3,7 @@
 #   --plano  só mostra o que seria feito, sem gerar arquivos.
 import os, re, sys, json, datetime, unicodedata
 import openpyxl
-from comum import FF, CONFIG, sp, duracao, secs, hms, limpar, video_de, planilha_de, log, encoder
+from comum import pasta_tipo, PREFIXO_TIPO, FF, CONFIG, sp, duracao, secs, hms, limpar, video_de, planilha_de, log, encoder
 
 def vf_vert(zoom=1.0):
     """Vertical 1080x1920: fundo desfocado + o vídeo no meio. zoom > 1 corta as laterais e o vídeo ocupa mais a tela
@@ -80,7 +80,10 @@ def planejar(pasta):
     for i in itens:
         c = i['cat'].lower()
         if not (c.startswith('corte') or c.startswith('short')): continue
-        tipo = 'Longos' if 'longo' in c else 'Medios' if ('médio' in c or 'medio' in c) else 'Shorts'
+        # 1.2.0: não há mais corte médio. Linha "Corte médio" de planilha antiga não gera o vídeo 16:9;
+        # só a versão vertical (corte curto), quando cabe em 3:00.
+        medio = 'médio' in c or 'medio' in c
+        tipo = 'Longos' if ('longo' in c or medio) else 'Shorts'
         # cada peça: [início, fim, ajustar_início, ajustar_fim]; na v1 (±30 s) todas as bordas são ajustadas em pausas
         pecas = [[i['ini'], i['fim'], not v2, not v2]]; tirados = []
         for rm in remov:
@@ -95,13 +98,13 @@ def planejar(pasta):
         alertas = [m['n'] for m in mantidos if not (m['fim'] <= i['ini'] or m['ini'] >= i['fim'])]
         bipe = tipo == 'Shorts' and any(k in i['obs'].lower() for k in CONFIG['bipe_quando_obs_contem'])
         if tipo == 'Shorts': pecas = tirar_pausas(pasta, pecas)
-        plano.append(dict(i, tipo=tipo, pecas=pecas, removidos=sorted(set(tirados)), alertas=alertas, bipe=bipe))
-        # corte de até 3:00 também vira Short/Reels/TikTok (17/11/2026). Se corte + finalização vertical passar de 3:00,
-        # o finalizar.py tira a finalização das versões do YouTube e do Instagram (ver comum.final_vertical_cabe).
+        if not medio: plano.append(dict(i, tipo=tipo, pecas=pecas, removidos=sorted(set(tirados)), alertas=alertas, bipe=bipe))
+        # longo que, depois das remoções, ficar com até 3:00 também vira corte curto. Se corte + finalização vertical
+        # passar de 3:00, o finalizar.py tira a finalização das versões do YouTube e do Instagram (comum.final_vertical_cabe).
         lim_short = CONFIG.get('limite_short_s', 180)
-        if tipo == 'Medios' and pecas and sum(b - a for a, b, *_ in pecas) <= lim_short:
+        if tipo == 'Longos' and pecas and sum(b - a for a, b, *_ in pecas) <= lim_short:
             plano.append(dict(i, tipo='Shorts', pecas=tirar_pausas(pasta, [list(x) for x in pecas]), removidos=sorted(set(tirados)), alertas=alertas,
-                              bipe=True, do_medio=True))   # bipe: só age se a transcrição achar palavrão
+                              bipe=True, do_longo=not medio, do_medio=medio))   # bipe: só age se a transcrição achar palavrão
     return dict(video=video, planilha=xl, D=D, v2=v2, plano=plano, mantidos=mantidos, remov=remov)
 
 def norm(w): return re.sub(r'[^a-z]', '', unicodedata.normalize('NFKD', w.lower()).encode('ascii', 'ignore').decode())
@@ -133,7 +136,7 @@ def processar(pasta, so_plano=False):
     if so_plano:
         for p in P['plano']:
             print(f"{p['tipo']:6} {p['n']:>2} {hms(p['ini'])}-{hms(p['fim'])} peças={[(hms(a), hms(b)) for a, b, *_ in p['pecas']]} "
-                  f"removidos={p['removidos']} alertas={p['alertas']}{' BIPE' if p['bipe'] else ''}{' (versão vertical do médio)' if p.get('do_medio') else ''}")
+                  f"removidos={p['removidos']} alertas={p['alertas']}{' BIPE' if p['bipe'] else ''}{' (versão vertical do longo)' if p.get('do_longo') else ''}")
         print('mantidos (Atenção):', [m['n'] for m in P['mantidos']]); return
     saida = os.path.join(pasta, 'Cortes')
     # cortes antigos de outra planilha são guardados, não apagados
@@ -167,7 +170,7 @@ def processar(pasta, so_plano=False):
                             d = os.path.join(destino_ant, os.path.relpath(os.path.join(raiz, x), saida))
                             os.makedirs(os.path.dirname(d), exist_ok=True); shutil.move(os.path.join(raiz, x), d)
                 log('cortes anteriores guardados em', f'Cortes_v{n}_antigo')
-    for t in ('Longos', 'Medios', 'Shorts'): os.makedirs(os.path.join(saida, t), exist_ok=True)
+    for t in ('Longos', 'Shorts'): os.makedirs(os.path.join(saida, pasta_tipo(t)), exist_ok=True)
     # correções de início/fim marcadas na nota do episódio (atualizar_notas.py grava em Cortes/_ajustes.json)
     pa = os.path.join(saida, '_ajustes.json'); ajustes = json.load(open(pa, encoding='utf-8')) if os.path.exists(pa) else {}
     ENC = enc_vertical(); trab = os.path.join(pasta, '_analise'); os.makedirs(trab, exist_ok=True)
@@ -176,14 +179,15 @@ def processar(pasta, so_plano=False):
     VFV = vf_vert(zoom)
     rel = []
     for p in P['plano']:
-        nome = f"{p['tipo'][:-1]} {p['n']:02d} - {limpar(p['tit'])}.mp4"
-        out = os.path.join(saida, p['tipo'], nome)
+        nome = f"{PREFIXO_TIPO[p['tipo']]} {p['n']:02d} - {limpar(p['tit'])}.mp4"
+        out = os.path.join(saida, pasta_tipo(p['tipo']), nome)
         reg = dict(n=p['n'], tipo=p['tipo'], tit=p['tit'], ini=p['ini'], fim=p['fim'], nota=p['nota'], t1=p['t1'], t2=p['t2'],
                    t3=p['t3'], capa=p['capa'], obs=p['obs'], removidos=p['removidos'], alertas=p['alertas'], arquivo=None,
-                   usados=[], dur=0, bipes=[], do_medio=bool(p.get('do_medio')))
+                   usados=[], dur=0, bipes=[], do_longo=bool(p.get('do_longo')), do_medio=bool(p.get('do_medio')))
         if not p['pecas']:
             log('NÃO GERADO (trecho inteiro marcado para remoção):', nome); rel.append(reg); continue
-        di, df = ajustes.get(f"{p['tipo']}-{p['n']}") or (ajustes.get(f"Medios-{p['n']}") if p.get('do_medio') else None) or [0, 0]
+        di, df = ajustes.get(f"{p['tipo']}-{p['n']}") or ((ajustes.get(f"Longos-{p['n']}") or ajustes.get(f"Medios-{p['n']}"))
+                                                         if (p.get('do_longo') or p.get('do_medio')) else None) or [0, 0]
         pecas = [list(x) for x in p['pecas']]
         if di or df:   # correção manual: desloca o início da 1ª peça e o fim da última, sem ajuste automático nessas bordas
             pecas[0][0] = max(0, pecas[0][0] + di); pecas[0][2] = False
@@ -196,7 +200,7 @@ def processar(pasta, so_plano=False):
         aj = [x for x in aj if x[1]-x[0] > (0.3 if p['tipo'] == 'Shorts' else 3)]; reg['usados'] = aj
         if not (os.path.exists(out) and duracao(out) > 0):
             log('gerando:', p['tipo'], nome)
-            tmp = os.path.join(saida, p['tipo'], '_tmp_' + nome)
+            tmp = os.path.join(saida, pasta_tipo(p['tipo']), '_tmp_' + nome)
             def corte(a, b, dest):
                 if p['tipo'] == 'Shorts':
                     fade = ['-af', f'afade=t=in:d=0.02,afade=t=out:st={max(0, b-a-0.03):.3f}:d=0.03'] if len(aj) > 1 else []

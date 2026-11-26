@@ -21,13 +21,13 @@ def conferir(pasta):
         if not c or not c.get('arquivo'): prob.append(f"{r['tipo']} {r['n']}: sem corte bruto registrado"); continue
         bruto = duracao(os.path.join(pasta, c['arquivo']))
         if r['tipo'] == 'Shorts':
-            if len(r['arquivos']) != len(fv): prob.append(f"Short {r['n']}: {len(r['arquivos'])} plataformas")
-            if not r.get('legenda'): prob.append(f"Short {r['n']}: SEM legenda")
+            if len(r['arquivos']) != len(fv): prob.append(f"Curto {r['n']}: {len(r['arquivos'])} plataformas")
+            if not r.get('legenda'): prob.append(f"Curto {r['n']}: SEM legenda")
             for p, a in r['arquivos'].items():
                 n += 1; d = duracao(os.path.join(pasta, a))
                 esp = bruto + (fv.get(p, 0) if final_vertical_cabe(bruto, fv.get(p, 0), p) else 0)
-                if abs(d - esp) > 1: prob.append(f"Short {r['n']} {p}: {d:.1f}s, esperado {esp:.1f}s")
-                if p in ('YouTube', 'Instagram') and d > LIMITE_SHORT: prob.append(f"Short {r['n']} {p}: {d:.0f}s passa do limite de {LIMITE_SHORT}s")
+                if abs(d - esp) > 1: prob.append(f"Curto {r['n']} {p}: {d:.1f}s, esperado {esp:.1f}s")
+                if p in ('YouTube', 'Instagram') and d > LIMITE_SHORT: prob.append(f"Curto {r['n']} {p}: {d:.0f}s passa do limite de {LIMITE_SHORT}s")
         elif r.get('arquivo'):
             n += 1; d = duracao(os.path.join(pasta, r['arquivo']))
             if abs(d - bruto - extra16) > 1: prob.append(f"{r['tipo']} {r['n']}: {d:.1f}s, esperado {bruto + extra16:.1f}s")

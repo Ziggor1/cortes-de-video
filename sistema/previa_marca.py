@@ -61,8 +61,8 @@ def main():
     else:
         ops = opcoes_padrao(vis)
     if not ops: log('O canal não tem logo no visual.json nem na pasta visual: nada a comparar.'); return 1
-    longo = sorted(glob.glob(os.path.join(pasta, 'Cortes', 'Longos', '*.mp4')) + glob.glob(os.path.join(pasta, 'Cortes', 'Medios', '*.mp4')))
-    short = sorted(glob.glob(os.path.join(pasta, 'Cortes', 'Shorts', '*.mp4')))
+    longo = sorted(glob.glob(os.path.join(pasta, 'Cortes', 'Longos', '*.mp4')) + glob.glob(os.path.join(pasta, 'Cortes', 'Medios', '*.mp4')))   # Medios: episódios feitos antes da 1.2.0
+    short = sorted(glob.glob(os.path.join(pasta, 'Cortes', 'Cortes Curtos', '*.mp4')) + glob.glob(os.path.join(pasta, 'Cortes', 'Shorts', '*.mp4')))
     out = os.path.join(COFRE, '_previas', 'marca', f'{canal}_{os.path.basename(pasta)}'); os.makedirs(out, exist_ok=True)
     for fmt, video, t, W, H in (('16x9', longo[0] if longo else None, float(arg('--t16', 120)), 1920, 1080),
                                 ('vertical', short[0] if short else None, float(arg('--tv', 8)), 1080, 1920)):

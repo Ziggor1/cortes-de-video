@@ -85,7 +85,7 @@ def nota_episodio(pasta):
     notas = [c['nota'] for c in cortes if isinstance(c.get('nota'), (int, float))]
     fm = dict(tipo='episodio', canal=canal, status=ROTULO[st], proximo_passo=PROXIMO[st], duracao=hms(D),
               video=os.path.basename(v), planilha=os.path.basename(xl) if xl else '',
-              longos=sum(c['tipo'] == 'Longos' for c in gerados), medios=sum(c['tipo'] == 'Medios' for c in gerados),
+              longos=sum(c['tipo'] in ('Longos', 'Medios') for c in gerados),   # Medios: episódios feitos antes da 1.2.0
               shorts=sum(c['tipo'] == 'Shorts' for c in gerados), nota_max=max(notas) if notas else None,
               publicados=f'{pub}/{len(gerados)}', alertas=len(mantidos), tags=['episodio', canal.lower().replace(' ', '-')])
     L = [f'# {ep}', '', f'**Canal:** [[{canal}]] · **Status:** {ROTULO[st]} · **Próximo passo:** {PROXIMO[st]}', '',
@@ -96,7 +96,7 @@ def nota_episodio(pasta):
         L.append(f"- Relatório da edição: [[{cof(os.path.join(pasta, 'Cortes', 'Relatorio_Edicao.xlsx'))}|Relatorio_Edicao.xlsx]]")
     if os.path.exists(os.path.join(pasta, '_analise', 'transcricao.txt')): L.append(f'- Transcrição: `_analise/transcricao.txt`')
     if st == 'reeditar': L += ['', '> [!warning] A planilha foi alterada depois da edição. Os cortes abaixo são da versão anterior.']
-    for tipo, titulo in (('Longos', 'Cortes longos (YouTube)'), ('Medios', 'Cortes médios (YouTube)'), ('Shorts', 'Shorts · Reels · TikTok')):
+    for tipo, titulo in (('Longos', 'Cortes longos (YouTube)'), ('Medios', 'Cortes médios (formato antigo, YouTube)'), ('Shorts', 'Cortes curtos (YouTube Shorts · Reels · TikTok)')):
         grupo = [c for c in cortes if c['tipo'] == tipo]
         if not grupo: continue
         L += ['', f'## {titulo}', '']
@@ -138,9 +138,9 @@ def nota_episodio(pasta):
 def nota_canal(canal, eps):
     caminho = os.path.join(COFRE, 'Canais', canal + '.md'); os.makedirs(os.path.dirname(caminho), exist_ok=True)
     antes, depois, _ = ler_nota(caminho)
-    L = [f'# {canal}', '', '| Episódio | Status | Duração | L / M / S | Publicados |', '|---|---|---|---|---|']
+    L = [f'# {canal}', '', '| Episódio | Status | Duração | Longos / Curtos | Publicados |', '|---|---|---|---|---|']
     for e in eps:
-        f = e['fm']; L.append(f"| [[{e['ep']}]] | {f['status']} | {f['duracao']} | {f['longos']} / {f['medios']} / {f['shorts']} | {f['publicados']} |")
+        f = e['fm']; L.append(f"| [[{e['ep']}]] | {f['status']} | {f['duracao']} | {f['longos']} / {f['shorts']} | {f['publicados']} |")
     padrao = ('\n\n## Perfil do canal\n\n- Público:\n- Tom e linguagem:\n- Apresentadores e convidados frequentes:\n'
               '- Regras próprias do canal (o que nunca cortar, vinhetas, chamadas):\n')
     gravar(caminho, dict(tipo='canal', tags=['canal']), antes, '\n'.join(L), depois, padrao)
@@ -148,9 +148,9 @@ def nota_canal(canal, eps):
 def painel(todos):
     caminho = os.path.join(COFRE, '00 Painel.md'); antes, depois, _ = ler_nota(caminho)
     ordem = ['aguardando-analise', 'reeditar', 'analisado', 'editado', 'finalizado', 'publicado']
-    L = ['# Painel de cortes', '', '| Episódio | Canal | Status | Próximo passo | L / M / S | Publicados |', '|---|---|---|---|---|---|']
+    L = ['# Painel de cortes', '', '| Episódio | Canal | Status | Próximo passo | Longos / Curtos | Publicados |', '|---|---|---|---|---|---|']
     for e in sorted(todos, key=lambda e: (ordem.index(e['st']), e['canal'], e['ep'])):
-        f = e['fm']; L.append(f"| [[{e['ep']}]] | [[{e['canal']}]] | {f['status']} | {f['proximo_passo']} | {f['longos']} / {f['medios']} / {f['shorts']} | {f['publicados']} |")
+        f = e['fm']; L.append(f"| [[{e['ep']}]] | [[{e['canal']}]] | {f['status']} | {f['proximo_passo']} | {f['longos']} / {f['shorts']} | {f['publicados']} |")
     pend = sum(e['st'] in ('aguardando-analise', 'analisado', 'reeditar', 'editado') for e in todos)
     L += ['', f'**{len(todos)} episódios · {pend} com trabalho pendente.**']
     padrao = ('\n\n## Tabela filtrável\n\n![[Episódios.base]]\n\n## Como usar\n\n1. Coloque o vídeo em `Pasta de Trabalho/<Canal>/<Episódio>/` (ex.: `Pasta de Trabalho/Meu Canal/Episódio 01/`).\n'

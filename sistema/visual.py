@@ -6,7 +6,7 @@
 # {
 #   "intro": "arquivo.mp4", "final": "arquivo.mp4",
 #   "finais_verticais": {"YouTube": "a.mp4", "Instagram": "b.mp4", "TikTok": "c.mp4"},
-#   "camadas":          [ {camada}, ... ],     # marca d'água dos longos e médios, aplicadas em ordem
+#   "camadas":          [ {camada}, ... ],     # marca d'água dos longos, aplicadas em ordem
 #   "camadas_vertical": [ {camada}, ... ],     # marca d'água dos Shorts
 #   "capa_logo": "logo.png", "capa_modelo": "", "fonte": "",
 #   "capa_cor_texto": "FFD400", "capa_cor_contorno": "000000", "legenda_cor": "FFFFFF", "legenda_destaque": "FFD400",

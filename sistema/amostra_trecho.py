@@ -37,7 +37,7 @@ try:
             if finalizar.montar(bruto, d, W or 1920, H or 1080, finalizar.fps_de(src), None, None, vis['camadas'],
                                 censura=finalizar.censura_16x9(vis, W or 1920, H or 1080)):
                 quadro(d, dl / 2, d[:-4] + '.jpg'); feitos.append(d); log(f'16:9 ponto {p:.0%} ({t:.0f} s do corte):', d)
-    else: log('Sem longo/médio editado neste episódio.')
+    else: log('Sem longo editado neste episódio.')
     S = escolher(('Shorts',), ns)
     if S:
         src = os.path.join(pasta, S['arquivo']); base = os.path.basename(src); ds = min(dur, duracao(src)); bruto = os.path.join(trab, 's.mp4')

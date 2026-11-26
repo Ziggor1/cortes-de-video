@@ -16,7 +16,6 @@ views:
       - note.proximo_passo
       - note.duracao
       - note.longos
-      - note.medios
       - note.shorts
       - note.nota_max
       - note.publicados
@@ -31,7 +30,6 @@ views:
       - note.status
       - note.duracao
       - note.longos
-      - note.medios
       - note.shorts
       - note.nota_max
       - note.publicados

@@ -14,8 +14,9 @@ from comum import CONFIG, hms, secs, log
 import tempos
 
 BLOCO_S, SOBRA_S = 720, 60          # blocos de 12 min com 1 min de sobreposição
-MAX_POR_TIPO = {'Short': 180, 'Médio': 630, 'Tema': 2700}   # durações de 17/11/2026
-MIN_POR_TIPO = {'Short': 20, 'Médio': 170, 'Tema': 540}
+MAX_POR_TIPO = {'Short': 180, 'Longo': 2700}   # corte curto até 3:00; longo de mais de 3 até 40 min (não há mais médio)
+MIN_POR_TIPO = {'Short': 30, 'Longo': 170}
+TIPOS = {'short': 'Short', 'longo': 'Longo', 'medio': 'Longo', 'médio': 'Longo', 'tema': 'Longo'}   # médio/tema: cache antigo
 LLM = CONFIG.get('llm') or {}
 # Modelos em ordem; se um falhar ou não devolver JSON, tenta o próximo. Prefira modelos diretos: modelos de "raciocínio"
 # costumam pensar em voz alta no lugar da resposta e não devolvem o JSON pedido.
@@ -34,20 +35,19 @@ def base_url():
     return f'http://127.0.0.1:{p}/v1'
 
 
-PROMPT = """Você é editor de cortes de um canal brasileiro que publica cortes de lives e podcasts no YouTube (longos e médios) e em Shorts/Reels/TikTok.
+PROMPT = """Você é editor de cortes de um canal brasileiro que publica cortes de lives e podcasts no YouTube (cortes longos) e em Shorts/Reels/TikTok.
 Vídeo: "{titulo}".{comentarios}
 
 Abaixo está um trecho da transcrição automática ({ini} a {fim}). Cada linha começa com o tempo [h:mm:ss]. A pontuação é automática e pode falhar.
 
 Escolha os MELHORES momentos deste trecho para virar corte — no máximo 3, só o que você publicaria de verdade. [] é uma resposta normal quando o trecho é fraco; não complete a cota. Tipos:
-- "Short": 25 s a 3 min (o ideal é até 90 s), UMA ideia. A primeira frase prende sozinha (pergunta, afirmação forte, número, conflito) e o fim fecha a ideia (conclusão, piada, frase de efeito). Nada que dependa do que veio antes.
-- "Médio": de 3 a 10 min, uma história, reação ou discussão completa que se entende sem ter visto a live.
-- "Tema": um assunto inteiro que começa E termina dentro deste trecho (para corte longo de 10 a 40 min).
+- "Short": de 45 s a 2 min 50 s (o ideal é de 1 a 2 min e meio), UMA ideia COMPLETA: a primeira frase prende sozinha (pergunta, afirmação forte, número, conflito), o meio desenvolve e o fim fecha a ideia (conclusão, piada, frase de efeito). Não corte a história antes da conclusão. Nada que dependa do que veio antes.
+- "Longo": de 3 min em diante, um assunto, história, reação ou discussão inteira que começa E termina dentro deste trecho e se entende sem ter visto a live. Pegue o assunto completo, não só a parte mais forte.
 Descarte: abertura e cumprimentos, pedidos de like/inscrição, anúncios e patrocínio, leitura de superchat sem resposta interessante, navegação ("põe na tela", "próximo", "deixa eu ver"), problemas técnicos, despedida.
 Prefira: opinião forte com argumento, conflito, humor, indignação, revelação, frase citável, história com começo-meio-fim, assunto do noticiário.
 
 Responda SOMENTE com um array JSON, sem texto antes ou depois. Cada item:
-{{"tipo": "Short"|"Médio"|"Tema", "tema": "até 8 palavras", "inicio_citacao": "as 8 a 12 PRIMEIRAS palavras do corte, copiadas EXATAMENTE da transcrição", "fim_citacao": "as 8 a 12 ÚLTIMAS palavras do corte, copiadas EXATAMENTE da transcrição", "tempo_aprox": "h:mm:ss da linha onde o corte começa", "gancho": "a frase de abertura", "por_que": "até 20 palavras, concreto: o fato, a frase ou o conflito que prende (nada genérico como 'análise do tema')", "nota": 1 a 10, "risco": "" ou "conferir: motivo" (acusação a pessoa, crime, saúde, eleição, palavrão em Short)}}
+{{"tipo": "Short"|"Longo", "tema": "até 8 palavras", "inicio_citacao": "as 8 a 12 PRIMEIRAS palavras do corte, copiadas EXATAMENTE da transcrição", "fim_citacao": "as 8 a 12 ÚLTIMAS palavras do corte, copiadas EXATAMENTE da transcrição", "tempo_aprox": "h:mm:ss da linha onde o corte começa", "gancho": "a frase de abertura", "por_que": "até 20 palavras, concreto: o fato, a frase ou o conflito que prende (nada genérico como 'análise do tema')", "nota": 1 a 10, "risco": "" ou "conferir: motivo" (acusação a pessoa, crime, saúde, eleição, palavrão em Short)}}
 
 TRANSCRIÇÃO:
 {texto}"""
@@ -152,7 +152,7 @@ def localizar(ws, toks, cit, perto, depois, ate, ultimo=False):
     return None
 
 def mapear(ws, toks, c, bloco_ini, bloco_fim):
-    tipo = {'short': 'Short', 'medio': 'Médio', 'médio': 'Médio', 'tema': 'Tema'}.get(str(c.get('tipo', '')).strip().lower(), 'Short')
+    tipo = TIPOS.get(str(c.get('tipo', '')).strip().lower(), 'Short')
     try: aprox = secs(txt(c.get('tempo_aprox'), 12)) if c.get('tempo_aprox') else bloco_ini
     except (ValueError, TypeError): aprox = bloco_ini
     i = localizar(ws, toks, c.get('inicio_citacao'), aprox, bloco_ini - 30, bloco_fim + 30)
@@ -161,10 +161,10 @@ def mapear(ws, toks, c, bloco_ini, bloco_fim):
     if i is None: return r
     a = ws[i][0]; r['inicio_s'] = round(a, 2)
     j = localizar(ws, toks, c.get('fim_citacao'), a + MIN_POR_TIPO[tipo] + 30, a + MIN_POR_TIPO[tipo], a + MAX_POR_TIPO[tipo] + 30, ultimo=True)
-    if j is None:   # o modelo errou o tipo (ex.: "médio" de 40 s): aceita o fim se for coerente e reclassifica pela duração
+    if j is None:   # o modelo errou o tipo (ex.: "Longo" de 40 s): aceita o fim se for coerente e reclassifica pela duração
         j = localizar(ws, toks, c.get('fim_citacao'), a + 60, a + 15, a + 1800, ultimo=True)
         if j is not None:
-            d = ws[j][1] - a; novo = 'Short' if d <= 180 else 'Médio' if d <= 600 else 'Tema'
+            d = ws[j][1] - a; novo = 'Short' if d <= 180 else 'Longo'
             if novo != tipo: r['tipo'] = novo; r['obs'] = f'tipo sugerido: {tipo}; reclassificado pela duração'
     if j is not None: r['fim_s'] = round(ws[j][1], 2)
     return r

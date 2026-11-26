@@ -7,7 +7,7 @@
 #      e nomes próprios. Descontos: pedido de like, abertura/encerramento (cumprimentos) e leitura de superchat.
 #   2. Candidatos de Short PRONTOS: 25–90 s, começando e terminando no limite de frases, sem começo dependente
 #      ("isso aqui", "ele"…) nem fim em conectivo; tempos exatos para o cortes.json.
-#   3. Assuntos do episódio (mudança de vocabulário a cada minuto): blocos candidatos a longo/médio com palavras-chave.
+#   3. Assuntos do episódio (mudança de vocabulário a cada minuto): blocos candidatos a corte longo com palavras-chave.
 #   4. Triagem por LLM (triagem_llm.py), se existir, cruzada com os sinais.
 # Entrega da fala, tipos de gancho, gaguejada e juiz final dos Shorts (13/11/2026, tarde): ideias do ve_virality.py e do
 # ve_shorts.py do repositório EverythingAI-Pro/ai-video-editor (licença MIT, © 2026 EveryThingAi), adaptadas ao português e a este fluxo.
@@ -302,21 +302,23 @@ def assuntos(ws, fr, media, D, bloco=60.0, viz=3):
         tf = sum((bl[k] for k in range(int(a // bloco), min(nb, int(math.ceil(b / bloco))))), collections.Counter())
         chave = [w for w, _ in sorted(tf.items(), key=lambda kv: -kv[1] * math.log(nb / (1 + df[kv[0]])))[:6]]
         d = b - a
-        tipo = ('longo — dividir ou escolher o melhor trecho' if d > 2400 else 'longo (tema inteiro)' if d >= 600 else
-                'médio' if d >= 180 else 'curto: Short ou juntar ao vizinho')
+        tipo = ('longo — dividir ou escolher o melhor trecho' if d > 2400 else 'longo (tema inteiro)' if d >= 180 else
+                'curto: corte curto ou juntar ao vizinho')
         segs.append(dict(inicio=round(a, 1), fim=round(b, 1), dur=round(d), chave=chave, nota=round(media(a, b), 2), tipo=tipo))
     return segs
 
 def ler_cortes(A):
     cj = os.path.join(A, 'cortes.json')
     if not os.path.exists(cj): return None
-    return [(secs(c['inicio']), secs(c['fim']), c['categoria'], c['tema']) for c in json.load(open(cj, encoding='utf-8'))['cortes']
-            if c['categoria'] in ('Corte longo', 'Corte médio', 'Short/Reels')]
+    # "Corte curto" (nome desde a 1.2.0) conta como Short; "Corte médio" só existe em episódios feitos antes da 1.2.0.
+    return [(secs(c['inicio']), secs(c['fim']), 'Short/Reels' if c['categoria'] == 'Corte curto' else c['categoria'], c['tema'])
+            for c in json.load(open(cj, encoding='utf-8'))['cortes']
+            if c['categoria'] in ('Corte longo', 'Corte médio', 'Short/Reels', 'Corte curto')]
 
 def nos_cortes(cortes, a, b, minimo, cats=None):
     if cortes is None: return '–'
     lim = CONFIG.get('limite_short_s', 180)
-    vale = lambda c: not cats or c[2] in cats or ('Short/Reels' in cats and c[2] == 'Corte médio' and c[1] - c[0] <= lim)
+    vale = lambda c: not cats or c[2] in cats or ('Short/Reels' in cats and c[2] != 'Short/Reels' and c[1] - c[0] <= lim)
     d = [f'{c[2].split()[-1]}: {c[3][:28]}' for c in cortes if vale(c)
          and min(b, c[1]) - max(a, c[0]) >= min(minimo, 0.5 * (c[1] - c[0]))]
     if d: return '; '.join(d[:2])
@@ -372,7 +374,7 @@ def gerar(pasta):
         jz_txt = (('✔ ' if jz.get('aprovado') else '✘ ') + cel(jz.get('motivo', ''))) if jz else '–'
         L.append(f"| {k} | {hms(c['inicio'])} ({c['inicio']}–{c['fim']}) | {c['dur']:.0f} s | {c['nota']:+.2f} | {', '.join(c['tipos']) or '–'} | "
                  f"{ent_txt} | {cel(c['primeira'], 18)} | {cel(c['ultima'], 14)} | {jz_txt} | {nc} |")
-    L += ['', '## 3. Assuntos do episódio (para longos e médios)', '',
+    L += ['', '## 3. Assuntos do episódio (para cortes longos)', '',
           'Fronteiras onde o vocabulário muda, ajustadas ao começo de frase com maior pausa. Confira na transcrição: troca de assunto na mesma fala pode não aparecer.', '',
           '| # | Trecho | Duração | Nota média | Palavras-chave | Sugestão | Nos cortes? |', '|---|---|---|---|---|---|---|']
     for k, s in enumerate(segs, 1):
@@ -387,7 +389,7 @@ def gerar(pasta):
         def trecho(c):
             a = c.get('inicio_s'); b = c.get('fim_s')
             if a is None: return None, None
-            return a, (b if b is not None else a + {'Short': 60, 'Médio': 240, 'Tema': 900}.get(c.get('tipo'), 60))
+            return a, (b if b is not None else a + {'Short': 90, 'Longo': 420, 'Médio': 240, 'Tema': 900}.get(c.get('tipo'), 90))
         def forca(c):
             import triagem_llm
             a, b = trecho(c); return triagem_llm.nota_num(c.get('nota')) + (2 * media(a, b) if a is not None else -3)
@@ -401,7 +403,7 @@ def gerar(pasta):
             L.append(f"| {k} | {c.get('tipo')} | {hms(a)}–{fim_txt} | {c.get('nota')} | {sv:+.2f} | {conc} | {cel(c.get('tema'))} | {cel(c.get('por_que'))} | {nc} |")
     if cortes is not None:
         L += ['', f"**Fora dos cortes:** {fora['trechos']} dos {len(topo)} trechos fortes, {fora['shorts']} dos {len(shorts)} candidatos de Short"
-              + (f", {fora['llm']} candidatos da triagem LLM" if llm else '') + '. Confira se algum merece um Short ou médio.']
+              + (f", {fora['llm']} candidatos da triagem LLM" if llm else '') + '. Confira se algum merece um corte curto ou longo.']
     open(os.path.join(A, 'momentos.md'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L) + '\n')
     json.dump(dict(sinais=usados, shorts=shorts, assuntos=segs), open(os.path.join(A, 'momentos.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     log('mapa de momentos:', os.path.join(A, 'momentos.md'), f'(sinais: {", ".join(usados)}; {len(shorts)} Shorts prontos; {len(segs)} assuntos'

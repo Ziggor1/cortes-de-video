@@ -12,9 +12,9 @@ Tudo acontece numa conversa com o Claude usando a skill **/cortes-de-video**. Es
 |---|---|---|---|---|
 | 0 | Colocar o vídeo em `Pasta de Trabalho/<Canal>/<Episódio>/` | você | pasta com o `.mp4` | 1 · aguardando análise |
 | 1 | Análise: transcrição, grade de quadros, intensidade do áudio, mapa de momentos, cortes, notas e títulos | Claude | `Cortes_<tema>.xlsx` + `_analise/` | 2 · analisado |
-| 2 | Revisão da análise (opcional) | você | ajustes na planilha | — |
-| 3 | Edição: cortes 16:9, Shorts 9:16, remoções, bipes | Claude | `Cortes/` + `Relatorio_Edicao.xlsx` | 3 · editado |
-| 4 | Finalização: intro + final + marca d'água (longos/médios), capa 1280×720, Shorts com legenda + marca + final vertical | Claude | `Publicar/` | 3 · pronto para publicar |
+| 2 | Revisão visual dos cortes, em duas fases: primeiro os longos sobre o episódio inteiro, depois os curtos dentro dos longos aprovados (`revisar_cortes.py`) | você | `_analise/revisao_cortes.json`, aplicada no `cortes.json` | — |
+| 3 | Edição: cortes longos 16:9, cortes curtos 9:16, remoções, bipes | Claude | `Cortes/` + `Relatorio_Edicao.xlsx` | 3 · editado |
+| 4 | Finalização: intro + final + marca d'água (longos), capa 1280×720, cortes curtos com legenda + marca + final vertical | Claude | `Publicar/` | 3 · pronto para publicar |
 | 5 | Atualização das notas e do [[00 Painel]] | Claude (automático) | notas do episódio e do canal | — |
 | 6 | Publicação: subir os arquivos de `Publicar/` e marcar a caixa de cada corte | você | caixas marcadas | 4 · publicado |
 | 7 | Desempenho: preencher a aba "Desempenho" da planilha | você | calibra a nota dos próximos | — |
@@ -53,8 +53,8 @@ Tudo acontece numa conversa com o Claude usando a skill **/cortes-de-video**. Es
    ├─ video.mp4
    ├─ Cortes_<tema>.xlsx    ← planilha da análise
    ├─ _analise/             ← transcrição, grade de quadros, mapa de momentos
-   ├─ Cortes/{Longos,Medios,Shorts}/ + Relatorio_Edicao.xlsx   ← cortes brutos
-   └─ Publicar/{Longos,Medios,Capas,Shorts/{YouTube,Instagram,TikTok}}/   ← o que vai para as plataformas
+   ├─ Cortes/{Longos,Cortes Curtos}/ + Relatorio_Edicao.xlsx   ← cortes brutos
+   └─ Publicar/{Longos,Capas,Cortes Curtos/{YouTube,Instagram,TikTok}}/   ← o que vai para as plataformas
 ```
 
 ## Regras

@@ -9,7 +9,7 @@ Aplicada por `_sistema/finalizar.py`, depois da edição. Os cortes brutos (`Cor
 ## O que entra em cada formato
 | Formato | Intro | Marca d'água | Final | Legenda | Capa |
 |---|---|---|---|---|---|
-| Longos e médios (16:9) | sim | camadas 16:9 do canal | final 16:9 | não | 1280×720 + 2 opções |
+| Longos (16:9) | sim | camadas 16:9 do canal | final 16:9 | não | 1280×720 + 2 opções |
 | Shorts (9:16, cortes de até 3:00) | não | camadas verticais do canal | uma versão por plataforma (YouTube, Instagram, TikTok), sempre com a finalização vertical | palavra destacada | não |
 
 ## Configuração de cada canal
@@ -48,4 +48,4 @@ Dica: logo escuro sobre fundo escuro some; nos Shorts, o logo fica na faixa desf
 - Amostras aprovadas: (anote aqui o canal, o episódio e a data quando aprovar).
 
 ## Tempos de referência
-Medidos num PC com RTX 3050 (NVIDIA): transcrição ~16× o tempo real; longo de ~21 min finalizado em ~2 min 50 s; episódio de 2 h com 11 cortes 16:9 + 4 Shorts em 3 plataformas + capas em ~19 min. Sem placa NVIDIA, a transcrição e a exportação demoram bem mais. Anote aqui os tempos medidos na sua máquina.
+Médias de referência estão no README do projeto. Sem placa de vídeo compatível, a transcrição e a exportação demoram bem mais. Anote aqui os tempos medidos na sua máquina.

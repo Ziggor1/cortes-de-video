@@ -5,7 +5,7 @@
 #                            "gancho": 2, "autossuf": 1, "emocao": 2, "frase": 1, "em_alta": 2,
 #                            "titulo1": "...", "titulo2": "...", "titulo3": "...", "capa": "...",
 #                            "primeira_frase": "...", "obs": "..."}, ...]}
-# Categorias: Corte longo, Corte médio, Short/Reels, Remover (anúncio), Remover (outros),
+# Categorias: Corte longo (mais de 3 até 40 min), Corte curto (até 3:00; antes "Short/Reels"), Remover (anúncio), Remover (outros),
 #             Atenção (políticas), Atenção (direitos), Atenção (monetização)
 import os, sys, json, csv
 from openpyxl import Workbook
@@ -13,8 +13,9 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from comum import secs, hms, duracao, video_de, log, CONFIG
 
-ORDEM = ['Corte longo', 'Corte médio', 'Short/Reels', 'Remover (anúncio)', 'Remover (outros)']
-COR = {'Corte longo': 'DDEBF7', 'Corte médio': 'E2EFDA', 'Short/Reels': 'FFF2CC', 'Remover': 'F8CBAD', 'Atenção': 'FCE4D6'}
+ORDEM = ['Corte longo', 'Corte médio', 'Corte curto',   # 'Corte médio': planilhas feitas antes da 1.2.0
+         'Remover (anúncio)', 'Remover (outros)']
+COR = {'Corte longo': 'DDEBF7', 'Corte médio': 'E2EFDA', 'Corte curto': 'FFF2CC', 'Short/Reels': 'FFF2CC', 'Remover': 'F8CBAD', 'Atenção': 'FCE4D6'}
 CAB = ['Nº', 'Categoria', 'Início', 'Fim', 'Duração', 'Título / Tema', 'Nota (0–10)', 'Gancho', 'Autossuf.', 'Emoção', 'Frase',
        'Tema em alta', 'Intensidade do áudio', 'Título 1 – citação', 'Título 2 – pergunta', 'Título 3 – busca', 'Texto da capa',
        'Primeira frase', 'Observação']
@@ -28,6 +29,8 @@ def intensidade_media(pasta, ini, fim):
 
 def gerar(pasta):
     j = json.load(open(os.path.join(pasta, '_analise', 'cortes.json'), encoding='utf-8'))
+    for c in j['cortes']:   # 1.2.0: "Short/Reels" passou a se chamar "Corte curto"
+        if c.get('categoria') == 'Short/Reels': c['categoria'] = 'Corte curto'
     D = duracao(video_de(pasta))
     import validar_cortes   # avisos não bloqueiam: o Claude lê e decide
     for a in validar_cortes.validar(pasta): log('AVISO', a)
@@ -42,6 +45,7 @@ def gerar(pasta):
         hmsf = lambda t: f'{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}'
         for c in cortes:
             if c['categoria'] not in ORDEM[:3]: continue
+            if c.get('borda_revisada') or c.get('borda_igor'): continue   # bordas ajustadas pelo usuário na revisão visual: não mexe
             a0, b0 = secs(c['inicio']), secs(c['fim'])
             a1, b1, av = bordas.ajustar(wsx, a0, b0, cal)
             c['inicio'], c['fim'] = hmsf(a1), hmsf(b1)
@@ -70,7 +74,7 @@ def gerar(pasta):
             f"(respiro {cal['respiro_inicio']} s antes / {cal['respiro_fim']} s depois)")
     wb = Workbook(); ws = wb.active; ws.title = 'Cortes'
     ws['A1'] = f"Pontos de corte — {j['titulo']}"; ws['A1'].font = Font(name=F, bold=True, size=13)
-    ws['A2'] = (f'Vídeo de origem: {hms(D)}. Cortes longos, médios e Shorts: início e fim ajustados ao limite das falas (precisão de ~1 s). '
+    ws['A2'] = (f'Vídeo de origem: {hms(D)}. Cortes longos e curtos: início e fim ajustados ao limite das falas (precisão de ~1 s). '
                 'Remover/Atenção: ±30 s. Nota = soma dos 5 critérios (aba Critérios); é estimativa, não dado de audiência.')
     ws['A2'].font = Font(name=F, italic=True, size=9)
     ws.append([]); ws.delete_rows(3)

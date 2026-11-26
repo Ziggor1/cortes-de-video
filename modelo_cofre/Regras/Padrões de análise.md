@@ -25,11 +25,10 @@ O Claude lê esta nota antes de cada análise. Edite à vontade: a próxima aná
 ## Categorias
 | Categoria | Duração | Para quê |
 |---|---|---|
-| Corte longo | mais de 10 até 40 min | Um bloco de tema completo, para o YouTube |
-| Corte médio | mais de 3 até 10 min | Uma história ou discussão que se sustenta sozinha |
-| Short/Reels | 30 s a 3:00 (ideal até 90 s) | Uma frase de efeito, um momento forte ou uma história curta completa |
+| Corte longo | mais de 3 até 40 min | Um assunto, história ou discussão completa, para o YouTube; cada assunto em um longo só |
+| Corte curto | até 3:00 (ideal 1:00 a 2:30) | Uma história curta completa (gancho, desenvolvimento, conclusão) ou uma frase de efeito; YouTube Shorts, Reels e TikTok |
 
-Durações decididas em 17/11/2026 (antes: longo 10–30 min, médio 3–8 min, Short 30–90 s). Short não passa de 3:00 (limite do YouTube Shorts e do Instagram Reels).
+Corte curto não passa de 3:00 (limite do YouTube Shorts e do Instagram Reels) e pode sair de dentro de um longo. Planilhas antigas com "Corte médio" ou "Short/Reels" continuam aceitas (o médio gera só a versão vertical; "Short/Reels" vira "Corte curto").
 | Remover (anúncio / outros) | — | Publicidade, abertura e encerramento soltos, bastidores, problema técnico, música |
 | Atenção (políticas / direitos / monetização) | — | Ver [[Políticas e alertas]] |
 
@@ -69,13 +68,14 @@ Ordem da análise: `youtube.py` → `momentos.py` → `triagem_llm.py` (chama o 
 **O que o mapa (`_analise/momentos.md`) traz agora**
 1. Trechos fortes de 30 s. O chat conta **reações** (risada, choque, aplauso) além do volume, **sem a tendência da live** (o chat cresce sozinho no começo e no fim) e com **20 s de atraso** (o chat reage depois da fala). Abertura e encerramento (3 min) não contam reação do chat; cumprimento, pedido de like e leitura de superchat descontam.
 2. **Candidatos de Short prontos**: 25–90 s no limite de frases, sem começo dependente ("isso aqui", "ele", "por isso", "enfim"), sem abertura de navegação ("vamos lá", "põe na tela", "próximo") e sem fim em conectivo, vírgula ou pergunta. Os tempos já vêm em segundos para o `cortes.json`.
-3. **Assuntos do episódio**: onde o vocabulário muda, com palavras-chave e sugestão (longo, médio, curto). É o ponto de partida dos longos e médios.
+3. **Assuntos do episódio**: onde o vocabulário muda, com palavras-chave e sugestão (longo ou curto). É o ponto de partida dos longos.
 4. **Triagem por LLM** (`triagem_llm.py`, API de LLM configurada (`config.json` → `llm`)): segunda leitura da transcrição em blocos de 12 min. Os tempos vêm de citação exata conferida na transcrição, nunca do modelo. Envia só a transcrição do vídeo público, o título e comentários públicos.
 
 **Rubrica do bom momento**
-- **Short**: uma ideia só. A 1ª frase prende sozinha (pergunta, afirmação forte, número, conflito) e o fim fecha a ideia (conclusão, piada, frase de efeito). Ideal de 35–70 s; nunca depende do que veio antes.
-- **Médio**: história, reação ou discussão completa. Começa no fato ou na pergunta que dispara o assunto e termina na conclusão, não na transição para o próximo item.
-- **Longo**: um assunto inteiro da seção 3; só junte assuntos vizinhos quando forem o mesmo tema.
+- **Corte curto**: uma ideia completa. A 1ª frase prende sozinha (pergunta, afirmação forte, número, conflito), o meio desenvolve e o fim fecha a ideia (conclusão, piada, frase de efeito). Ideal de 1:00 a 2:30; abaixo de 45 s só frase de efeito que se sustenta sozinha; nunca depende do que veio antes.
+- **Longo**: um assunto inteiro da seção 3 (história, reação ou discussão completa), do fato ou da pergunta que o dispara até a conclusão; só junte assuntos vizinhos quando forem o mesmo tema.
+
+**Revisão em duas fases** (`revisar_cortes.py`): (1) longos mostrados sobre o episódio inteiro, com os trechos sem corte à vista, para o usuário aprovar, recusar, aumentar, diminuir ou propor; (2) curtos propostos dentro dos longos aprovados, com a mesma revisão. Cada fase é gravada no `cortes.json` por `aplicar_revisao.py --aplicar`; bordas ajustadas na revisão não são movidas pelo ajuste fino.
 - **Prioridade**: conteúdo forte **com** sinal da audiência (reação no chat, "Mais repetidos", comentário com tempo) vem antes de conteúdo forte sem sinal, que vem antes de sinal sem conteúdo. Sinal sozinho não basta: cumprimento, nome da live e leitura de superchat inflam o chat.
 - **Concordância**: momento apontado por duas fontes (sinais, Short pronto, triagem LLM) entra na lista, salvo motivo; cite a concordância na Observação.
 - **Fora dos cortes**: todo candidato de Short com nota ≥ +2,5 e todo candidato da triagem com nota ≥ 8 que ficarem fora precisam de um motivo dito ao usuário (repetido, risco, depende de contexto, fraco na leitura).

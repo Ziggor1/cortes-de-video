@@ -29,7 +29,7 @@ def gerar(pasta):
             credito = f"Trecho de: {info['title']} — {arroba or '(@ do canal: confirmar com o usuário)'}"
     else:
         credito = 'Trecho de: (preencher o título, o canal e o link do episódio original — sem dados do YouTube em _analise\\youtube)'
-    rot = {'Longos': 'Longo', 'Medios': 'Médio', 'Shorts': 'Short'}
+    rot = {'Longos': 'Longo', 'Medios': 'Longo', 'Shorts': 'Corte curto'}   # Medios: episódios feitos antes da 1.2.0
     L = [f'# Textos de publicação — {os.path.basename(pasta)}', '',
          'Gerado por `publicacao.py` a partir da planilha. Confira nomes, citações e alertas antes de publicar; o título 1 é a sugestão principal.', '']
     n = 0

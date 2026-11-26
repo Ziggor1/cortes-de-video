@@ -119,7 +119,13 @@ def log(*a):
     s = datetime.datetime.now().strftime('%H:%M:%S') + ' ' + ' '.join(map(str, a))
     print(s, flush=True)
 
-# Durações (decisão de 17/11/2026): Short até 3:00; médio de mais de 3 até 10 min; longo de mais de 10 até 40 min.
+# Durações: corte curto até 3:00; corte longo de mais de 3 até 40 min (desde a 1.2.0 não há mais corte médio).
+# Pastas e arquivos: "Cortes Curtos" e "Curto NN - tema.mp4"; dentro de Publicar\Cortes Curtos ficam YouTube, Instagram e TikTok.
+# O tipo interno nos registros continua 'Shorts'; 'Medios' só aparece em episódios feitos antes da 1.2.0.
+PASTA_TIPO = {'Longos': 'Longos', 'Medios': 'Medios', 'Shorts': 'Cortes Curtos'}
+PREFIXO_TIPO = {'Longos': 'Longo', 'Medios': 'Medio', 'Shorts': 'Curto'}
+ROTULO_TIPO = {'Longos': 'Corte longo', 'Medios': 'Corte médio', 'Shorts': 'Corte curto'}
+def pasta_tipo(tipo): return PASTA_TIPO.get(tipo, tipo)
 LIMITE_SHORT = CONFIG.get('limite_short_s', 180)
 PLATAFORMAS_COM_LIMITE = CONFIG.get('plataformas_com_limite', [])   # 17/11: vazio = todo Short sempre ganha a finalização vertical
 
